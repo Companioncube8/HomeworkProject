@@ -14,6 +14,7 @@ void AAICharacterController::SetPawn(APawn* InPawn)
 	{
 		checkf(InPawn->IsA<AAICharacter>(), TEXT("AAICharacterController::SetPawn AAICharacterController can possess only AAICharacter"));
 		CachedAICharacter = StaticCast<AAICharacter*>(InPawn);
+		
 	}
 	else
 	{

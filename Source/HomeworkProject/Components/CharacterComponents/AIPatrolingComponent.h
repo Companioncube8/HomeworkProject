@@ -8,6 +8,25 @@
 
 class APatrolingPath;
 
+UENUM(BlueprintType)
+enum class EPatrolingPathType : uint8
+{
+	PingPong,
+	Circle
+};
+
+USTRUCT(BlueprintType)
+struct FPatrolingPathInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Path")
+	EPatrolingPathType Type = EPatrolingPathType::Circle;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Path")
+	APatrolingPath* PatrolingPath;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HOMEWORKPROJECT_API UAIPatrollingComponent : public UActorComponent
 {
@@ -19,9 +38,9 @@ public:
 
 protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Path")
-	APatrolingPath* PatrolingPath;
-
+	FPatrolingPathInfo PatrolingPathInfo;
 private:
 	int32 CurrentWayPointIndex = -1;
+	bool bIsNeedGoBack = false;
 
 };

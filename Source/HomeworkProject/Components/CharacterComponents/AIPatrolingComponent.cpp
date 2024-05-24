@@ -6,14 +6,14 @@
 
 bool UAIPatrollingComponent::CanPatrol() const
 {
-	return PatrolingPath && PatrolingPath->GetWayPoints().Num() > 0;
+	return PatrolingPathInfo.PatrolingPath && PatrolingPathInfo.PatrolingPath->GetWayPoints().Num() > 0;
 }
 
 FVector UAIPatrollingComponent::SelectClosestWaypoint()
 {
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
-	const TArray<FVector> WayPoints = PatrolingPath->GetWayPoints();
-	FTransform PathTransform = PatrolingPath->GetActorTransform();
+	const TArray<FVector> WayPoints = PatrolingPathInfo.PatrolingPath->GetWayPoints();
+	FTransform PathTransform = PatrolingPathInfo.PatrolingPath->GetActorTransform();
 
 	FVector ClosestWayPoint;
 	float MinSqDistance = FLT_MAX;
@@ -33,14 +33,44 @@ FVector UAIPatrollingComponent::SelectClosestWaypoint()
 
 FVector UAIPatrollingComponent::SelectNextWaypoint()
 {
-	++CurrentWayPointIndex;
+	const TArray<FVector> WayPoints = PatrolingPathInfo.PatrolingPath->GetWayPoints();
 
-	const TArray<FVector> WayPoints = PatrolingPath->GetWayPoints();
-	if (CurrentWayPointIndex == WayPoints.Num())
+	if (PatrolingPathInfo.PatrolingPath->GetWayPoints().Num() == 1)
 	{
 		CurrentWayPointIndex = 0;
+		FTransform PathTransform = PatrolingPathInfo.PatrolingPath->GetActorTransform();
+		return PathTransform.TransformPosition(WayPoints[CurrentWayPointIndex]);
 	}
-	FTransform PathTransform = PatrolingPath->GetActorTransform();
+
+	if (bIsNeedGoBack)
+	{
+		--CurrentWayPointIndex;
+	} else
+	{
+		++CurrentWayPointIndex;
+	}
+
+	switch (PatrolingPathInfo.Type)
+	{
+	case EPatrolingPathType::Circle:
+		if (CurrentWayPointIndex == WayPoints.Num())
+		{
+			CurrentWayPointIndex = 0;
+		}
+		break;
+	case EPatrolingPathType::PingPong:
+		if (CurrentWayPointIndex == WayPoints.Num())
+		{
+			bIsNeedGoBack = true;
+			CurrentWayPointIndex = WayPoints.Num() - 2;
+		} else if (CurrentWayPointIndex == -1)
+		{
+			bIsNeedGoBack = false;
+			CurrentWayPointIndex = 1;
+		}
+		break;
+	}
+	FTransform PathTransform = PatrolingPathInfo.PatrolingPath->GetActorTransform();
 	FVector WayPoint = PathTransform.TransformPosition(WayPoints[CurrentWayPointIndex]);
 	return WayPoint;
 }
