@@ -15,6 +15,7 @@ void UCharacterEquipmentComponent::BeginPlay()
 	checkf(GetOwner()->IsA<ABaseCharacter>(), TEXT("UCharacterEquipmentComponent::BeginPlay() CharacterEquipmentComponent can beused only with a BaseCharacter"));
 	CachedBaseCharacter = StaticCast<ABaseCharacter *>(GetOwner());
 	CreateLoadout();
+	AutoEquip();
 }
 
 void UCharacterEquipmentComponent::CreateLoadout()
@@ -275,4 +276,12 @@ void UCharacterEquipmentComponent::ChangeCurrentWeaponFireMode()
 AMeleeWeaponItem* UCharacterEquipmentComponent::GetCurrentMeleeWeapon() const
 {
 	return CurrentMeleeWeapon;
+}
+
+void UCharacterEquipmentComponent::AutoEquip()
+{
+	if (AutoEqupItemInSlot != EEquipmentSlots::None)
+	{
+		EquipItemInSlot(AutoEqupItemInSlot);
+	}
 }

@@ -26,6 +26,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAIPatrollingComponent* AIPatrolingComponent;
 
-	UPROPERTY(EditAnywhare, BlueprintReadOnly, Category = "AI")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 };

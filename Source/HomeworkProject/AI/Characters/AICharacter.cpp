@@ -17,7 +17,7 @@ UAIPatrollingComponent* AAICharacter::GetPatrollingComponent() const
 }
 
 
-UBehaviorTree* AAICharacter::GetBehaviorTree()
+UBehaviorTree* AAICharacter::GetBehaviorTree() const
 {
 	return BehaviorTree;
 }

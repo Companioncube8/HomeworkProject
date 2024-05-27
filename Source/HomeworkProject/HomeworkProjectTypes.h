@@ -27,6 +27,9 @@ const FName FXParamTraceEnd = FName("TraceEnd");
 
 const FName SectionMontageReloadEnd = FName("ReloadEnd");
 
+const FName BB_CurrentTarget = FName("CurrentTarget");
+const FName BB_NextLocation = FName("NextLocation");
+
 UENUM(BlueprintType)
 enum class EEquipableItemType : uint8
 {

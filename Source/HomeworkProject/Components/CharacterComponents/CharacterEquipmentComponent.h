@@ -58,6 +58,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Lodout")
 	TSet<EEquipmentSlots> IgnoreSlotsWhileSwitching;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lodout")
+	EEquipmentSlots AutoEqupItemInSlot = EEquipmentSlots::None;
+
 private:
 	void CreateLoadout();
 
@@ -93,4 +96,6 @@ private:
 
 	bool bIsEquipping = false;
 	FTimerHandle EquipTimer;
+
+	void AutoEquip();
 };

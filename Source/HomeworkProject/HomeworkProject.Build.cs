@@ -8,7 +8,7 @@ public class HomeworkProject : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "TraceServices", "Niagara", "UMG" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "TraceServices", "Niagara", "UMG", "GameplayTasks", "NavigationSystem" });
 
 		PrivateIncludePaths.AddRange(new string[] { Name });
 
