@@ -14,16 +14,25 @@ void AThrowableItem::Throw()
 		return;
 	}
 
-	APlayerController* Controller = CharacterOwner->GetController<APlayerController>();
-	if (!IsValid(Controller))
-	{
-		return;
-	}
 
 	FVector PlayerViewPoint;
 	FRotator PlayerViewRotation;
 
-	Controller->GetPlayerViewPoint(PlayerViewPoint, PlayerViewRotation);
+	if (CharacterOwner->IsPlayerControlled())
+	{
+		APlayerController* Controller = CharacterOwner->GetController<APlayerController>();
+		if (!IsValid(Controller))
+		{
+			return;
+		}
+
+
+		Controller->GetPlayerViewPoint(PlayerViewPoint, PlayerViewRotation);
+	} else
+	{
+		PlayerViewPoint = CharacterOwner->GetMesh()->GetSocketLocation(SocketCharacterThrowable);
+		PlayerViewRotation = CharacterOwner->GetBaseAimRotation();
+	}
 
 	FTransform PlayerViewTransform(PlayerViewRotation, PlayerViewPoint);
 
