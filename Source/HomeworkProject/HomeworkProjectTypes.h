@@ -88,3 +88,10 @@ enum class ETeams : uint8
 	Player,
 	Enemy
 };
+
+UENUM(BlueprintType)
+enum class EPlatformBehavior : uint8
+{
+	OnDemand = 0,
+	Loop
+};
