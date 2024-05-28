@@ -499,6 +499,10 @@ void UBaseCharacterMovementComponent::PhysZipline(float DeltaTime, int32 Iterati
 
 void UBaseCharacterMovementComponent::PhysMantling(float DeltaTime, int32 Iterations)
 {
+	if (!CurrentMantlingParameters.MantlingCurve)
+	{
+		return;
+	}
 	float ElapsedTime = GetWorld()->GetTimerManager().GetTimerElapsed(MantlingTimer) + CurrentMantlingParameters.StartTime;
 	FVector MantlingCurveValue = CurrentMantlingParameters.MantlingCurve->GetVectorValue(ElapsedTime);
 	float PositionAlpha = MantlingCurveValue.X;

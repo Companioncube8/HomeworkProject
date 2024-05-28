@@ -3,10 +3,13 @@
 
 #include "PlatformTrigger.h"
 #include "HomeworkProjectTypes.h"
+#include "Characters/BaseCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Net/UnrealNetwork.h"
 
 APlatformTrigger::APlatformTrigger()
 {
+	bReplicates = true;
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	TriggerBox->SetCollisionProfileName(CollisionProfilePawnInteractionVolume);
 	SetRootComponent(TriggerBox);
@@ -21,7 +24,6 @@ void APlatformTrigger::BeginPlay()
 
 void APlatformTrigger::SetIsActivated(bool bIsActivated_In)
 {
-	bIsActivated = bIsActivated_In;
 	if (OnTriggerActivated.IsBound())
 	{
 		OnTriggerActivated.Broadcast(bIsActivated);
@@ -30,32 +32,51 @@ void APlatformTrigger::SetIsActivated(bool bIsActivated_In)
 
 void APlatformTrigger::OnTriggerOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	APawn* OtherPawn = Cast<APawn>(OtherActor);
+	ABaseCharacter* OtherPawn = Cast<ABaseCharacter>(OtherActor);
 	if (!IsValid(OtherPawn))
 	{
 		return;
 	}
 
-	OverlappedPawns.AddUnique(OtherPawn);
-
-	if (!bIsActivated && OverlappedPawns.Num() > 0)
+	if (GetLocalRole() == ROLE_Authority || OtherPawn->IsLocallyControlled())
 	{
-		SetIsActivated(true);
+		OverlappedPawns.AddUnique(OtherPawn);
+
+		if (!bIsActivated && OverlappedPawns.Num() > 0)
+		{
+			bIsActivated = true;
+			SetIsActivated(true);
+		}
 	}
 }
 
 void APlatformTrigger::OnTriggerOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	APawn* OtherPawn = Cast<APawn>(OtherActor);
+	ABaseCharacter* OtherPawn = Cast<ABaseCharacter>(OtherActor);
 	if (!IsValid(OtherPawn))
 	{
 		return;
 	}
 
-	OverlappedPawns.RemoveSingleSwap(OtherPawn);
-
-	if (bIsActivated && OverlappedPawns.Num() == 0)
+	if (GetLocalRole() == ROLE_Authority || OtherPawn->IsLocallyControlled())
 	{
-		SetIsActivated(false);
+		OverlappedPawns.RemoveSingleSwap(OtherPawn);
+
+		if (bIsActivated && OverlappedPawns.Num() == 0)
+		{
+			bIsActivated = false;
+			SetIsActivated(false);
+		}
 	}
+}
+
+void APlatformTrigger::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(APlatformTrigger, bIsActivated);
+}
+
+void APlatformTrigger::OnRep_IsActivated(bool bIsActivated_Old)
+{
+	SetIsActivated(bIsActivated);
 }

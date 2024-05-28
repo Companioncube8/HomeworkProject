@@ -171,6 +171,8 @@ public:
 	virtual FGenericTeamId GetGenericTeamId() const override;
 
 	/** ~IGenericTeamAgentInterface**/
+
+
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();

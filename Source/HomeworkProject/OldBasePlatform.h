@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HomeworkProjectTypes.h"
 #include "PlatformInvocator.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"

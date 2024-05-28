@@ -3,16 +3,17 @@
 
 #include "ReticleWidget.h"
 #include "Actors/Equipment/EquipableItem.h"
+#include "Characters/PlayersControllers/BasePlayerController.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
 
 void UReticleWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	checkf(GetOwningPlayerPawn()->IsA<ABaseCharacter>(), TEXT("UReticleWidget::NativeConstruct() UReticleWidget can be used only with ABaseCharacter"));
-	ABaseCharacter* Character = StaticCast<ABaseCharacter*>(GetOwningPlayerPawn());
-	if (Character) {
-		Character->OnAimingStateChanged.AddUObject(this, &UReticleWidget::OnAimingStateChange);
-		Character->GetCharacterEquipmentComponent_Mutable()->OnEquippedItemChanged.AddUObject(this, &UReticleWidget::OnEquippedItemChanged);
+	checkf(GetOwningPlayer()->IsA<ABasePlayerController>(), TEXT("UReticleWidget::NativeConstruct() UReticleWidget can be used only with ABaseCharacter"));
+	ABasePlayerController* PlayerController = StaticCast<ABasePlayerController*>(GetOwningPlayer());
+	if (PlayerController->GetBaseCharacter()) {
+		PlayerController->GetBaseCharacter()->OnAimingStateChanged.AddUObject(this, &UReticleWidget::OnAimingStateChange);
+		PlayerController->GetBaseCharacter()->GetCharacterEquipmentComponent_Mutable()->OnEquippedItemChanged.AddUObject(this, &UReticleWidget::OnEquippedItemChanged);
 	}
 }
 

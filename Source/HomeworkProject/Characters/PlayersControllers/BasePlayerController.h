@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/BaseCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "BasePlayerController.generated.h"
 
@@ -19,6 +20,8 @@ public:
 
 	bool GetIgnoreCameraPitch() const;
 	void SetIgnoreCameraPitch(bool bIgnoreCameraPitch_In);
+
+	ABaseCharacter* GetBaseCharacter() { return  CachedBaseCharacter.Get(); }
 
 protected:
 	virtual void SetupInputComponent() override;

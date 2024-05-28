@@ -4,6 +4,7 @@
 #include "BaseCharacter.h"
 
 #include "AIController.h"
+#include "Actors/Environment/PlatformTrigger.h"
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
