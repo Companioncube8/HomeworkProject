@@ -18,7 +18,7 @@
 #include "HomeworkProject/Actors/Interactive/Enviroment/Zipline.h"
 #include "HomeworkProject/Components/CharacterComponents/CharacterAttributeComponent.h"
 #include "HomeworkProject/HomeworkProjectTypes.h"
-
+#include "Net/UnrealNetwork.h"
 
 
 ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
@@ -294,6 +294,8 @@ void ABaseCharacter::Mantle(bool bForce)
 	}
 	if (LedgeDetectorComponent->DetectLedge(LedgeDescription))
 	{
+		bIsMantling = true;
+
 		const ACharacter* DefaultChar = GetDefault<ACharacter>(GetClass());
 
 		FMantlingMovementParameters MantlingMovementParameters;
@@ -326,7 +328,10 @@ void ABaseCharacter::Mantle(bool bForce)
 
 		MantlingMovementParameters.InitialAnimationLocation = MantlingMovementParameters.TargetLocation - MantlingSettings.AnimationCorrectionZ * FVector::UpVector + MantlingSettings.AnimationCorrectionXY * LedgeDescription.LedgeNormal;
 
-		GetBaseCharacterMovementComponent()->StartMantle(MantlingMovementParameters);
+		if (IsLocallyControlled() || GetLocalRole() == ROLE_Authority)
+		{
+			GetBaseCharacterMovementComponent()->StartMantle(MantlingMovementParameters);
+		}
 
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		AnimInstance->Montage_Play(MantlingSettings.MantlingMontage, 1.f, EMontagePlayReturnType::Duration, MantlingMovementParameters.StartTime);
@@ -735,4 +740,18 @@ void ABaseCharacter::SecondaryMeleeAttack()
 FGenericTeamId ABaseCharacter::GetGenericTeamId() const
 {
 	return  FGenericTeamId((uint8)Team);
+}
+
+void ABaseCharacter::OnRep_IsMantling(bool bWasMantling)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy && !bWasMantling && bIsMantling)
+	{
+		Mantle(true);
+	}
+}
+
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABaseCharacter, bIsMantling);
 }

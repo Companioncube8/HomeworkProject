@@ -54,7 +54,18 @@ void UBaseCharacterMovementComponent::BeginPlay() {
 void UBaseCharacterMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
-	bIsSprinting = (Flags &= FSavedMove_Character::FLAG_Custom_0) != 0;
+	bIsSprinting = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+
+	bool bWasMantling = GetBaseCharacterOwner()->bIsMantling;
+	bool bIsMantling = (Flags & FSavedMove_Character::FLAG_Custom_1) != 0;
+
+	if (GetBaseCharacterOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		if (!bWasMantling && bIsMantling)
+		{
+			GetBaseCharacterOwner()->Mantle(true);
+		}
+	}
 }
 
 void UBaseCharacterMovementComponent::StartSprint()
@@ -356,6 +367,7 @@ void UBaseCharacterMovementComponent::StartMantle(const FMantlingMovementParamet
 
 void UBaseCharacterMovementComponent::EndMantle()
 {
+	GetBaseCharacterOwner()->bIsMantling = false;
 	SetMovementMode(MOVE_Walking);
 }
 
@@ -523,6 +535,8 @@ void UBaseCharacterMovementComponent::PhysMantling(float DeltaTime, int32 Iterat
 
 	NewLocation += CurrentMantlingParameters.LedgeActor->GetRelativeLocation() - CurrentMantlingParameters.StartActorPosition;
 	FVector Delta = NewLocation - GetActorLocation();
+	Velocity = Delta / DeltaTime;
+
 	FHitResult HitResult;
 
 	SafeMoveUpdatedComponent(Delta, NewRotation, false, HitResult);
@@ -546,6 +560,11 @@ void UBaseCharacterMovementComponent::PhysWallRun(float DeltaTime, int32 iterati
 
 void UBaseCharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 {
+	if (GetBaseCharacterOwner()->GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		return;
+	}
+
 	switch (CustomMovementMode)
 	{
 	case (uint8)ECustomMovementMode::Mantling:
@@ -873,6 +892,7 @@ void FSavedMove_GC::Clear()
 {
 	Super::Clear();
 	bSavedIsSprinting = 0;
+	bSavedIsMantling = 0;
 }
 
 uint8 FSavedMove_GC::GetCompressedFlags() const
@@ -886,13 +906,18 @@ uint8 FSavedMove_GC::GetCompressedFlags() const
 		FLAG_Reserved_2		= 0x08,	// Reserved for future use
 		// Remaining bit masks are available for custom flags.
 		FLAG_Custom_0		= 0x10, // Sprinting flag
-		FLAG_Custom_1		= 0x20,
+		FLAG_Custom_1		= 0x20, // Mantling
 		FLAG_Custom_2		= 0x40,
 		FLAG_Custom_3		= 0x80,
 	 */
 	if (bSavedIsSprinting)
 	{
 		Result |= FLAG_Custom_0;
+	}
+	if (bSavedIsMantling)
+	{
+		Result &= ~FLAG_JumpPressed;
+		Result |= FLAG_Custom_1;
 	}
 	return Result;
 }
@@ -906,6 +931,11 @@ bool FSavedMove_GC::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* 
 		return false;
 	}
 
+	if (bSavedIsMantling != NewMove->bSavedIsMantling)
+	{
+		return false;
+	}
+
 	return Super::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
 }
 
@@ -913,9 +943,12 @@ void FSavedMove_GC::SetMoveFor(ACharacter* InCharacter, float InDeltaTime, FVect
 {
 	Super::SetMoveFor(InCharacter, InDeltaTime, NewAccel, ClientData);
 
-	UBaseCharacterMovementComponent* MovementComponent = StaticCast<UBaseCharacterMovementComponent*>(InCharacter->GetMovementComponent());
+	check(InCharacter->IsA<ABaseCharacter>());
+	ABaseCharacter* InBaseCharacter = StaticCast<ABaseCharacter *>(InCharacter);
+	UBaseCharacterMovementComponent* MovementComponent = InBaseCharacter->GetBaseCharacterMovementComponent();
 
 	bSavedIsSprinting = MovementComponent->bIsSprinting;
+	bSavedIsMantling = InBaseCharacter->bIsMantling;
 }
 
 void FSavedMove_GC::PrepMoveFor(ACharacter* Character)
