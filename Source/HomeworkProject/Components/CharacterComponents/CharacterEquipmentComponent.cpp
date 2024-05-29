@@ -7,7 +7,13 @@
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Actors/Equipment/Weapons/RangeWeaponItem.h"
 #include "Characters/BaseCharacter.h"
+#include "Net/UnrealNetwork.h"
 
+
+UCharacterEquipmentComponent::UCharacterEquipmentComponent()
+{
+	SetIsReplicatedByDefault(true);
+}
 
 void UCharacterEquipmentComponent::BeginPlay()
 {
@@ -16,6 +22,12 @@ void UCharacterEquipmentComponent::BeginPlay()
 	CachedBaseCharacter = StaticCast<ABaseCharacter *>(GetOwner());
 	CreateLoadout();
 	AutoEquip();
+}
+
+void UCharacterEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCharacterEquipmentComponent, CurrentEquippedSlot);
 }
 
 void UCharacterEquipmentComponent::CreateLoadout()
@@ -154,6 +166,11 @@ void UCharacterEquipmentComponent::EquipItemInSlot(EEquipmentSlots Slot)
 		return;
 	}
 
+	if ((uint32)Slot >= (uint32)ItemsArray.Num())
+	{
+		return;
+	}
+
 	UnEquipCurrentItem();
 
 	CurrentEquippedItem = ItemsArray[(uint32)Slot];
@@ -175,7 +192,6 @@ void UCharacterEquipmentComponent::EquipItemInSlot(EEquipmentSlots Slot)
 		{
 			AttachCurrentItemToEquippedSocket();
 		}
-		CurrentEquippedSlot = Slot;
 		CurrentEquippedItem->Equip();
 	}
 
@@ -188,6 +204,12 @@ void UCharacterEquipmentComponent::EquipItemInSlot(EEquipmentSlots Slot)
 	if (OnEquippedItemChanged.IsBound())
 	{
 		OnEquippedItemChanged.Broadcast(CurrentEquippedItem);
+	}
+
+	CurrentEquippedSlot = Slot;
+	if(GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_EquipItemInSlot(CurrentEquippedSlot);
 	}
 }
 
@@ -284,4 +306,14 @@ void UCharacterEquipmentComponent::AutoEquip()
 	{
 		EquipItemInSlot(AutoEqupItemInSlot);
 	}
+}
+
+void UCharacterEquipmentComponent::Server_EquipItemInSlot_Implementation(EEquipmentSlots Slot)
+{
+	EquipItemInSlot(Slot);
+}
+
+void UCharacterEquipmentComponent::OnRep_CurrentEquipSlot(EEquipmentSlots CurrentEquippedSlot_Old)
+{
+	EquipItemInSlot(CurrentEquippedSlot);
 }

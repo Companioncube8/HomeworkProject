@@ -21,6 +21,10 @@ class HOMEWORKPROJECT_API UCharacterEquipmentComponent : public UActorComponent
 {
 	GENERATED_BODY()
 public:
+	UCharacterEquipmentComponent();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	EEquipableItemType GetCurrentEquippedItemType() const;
 
 	ARangeWeaponItem* GetCurrentRangeWeapon() const;
@@ -62,6 +66,9 @@ protected:
 	EEquipmentSlots AutoEqupItemInSlot = EEquipmentSlots::None;
 
 private:
+	UFUNCTION(Server, Reliable)
+	void Server_EquipItemInSlot(EEquipmentSlots Slot);
+
 	void CreateLoadout();
 
 	void EquipAnimationFinished();
@@ -85,7 +92,12 @@ private:
 	AThrowableItem* CurrentThrowableItem;
 	AMeleeWeaponItem* CurrentMeleeWeapon;
 
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentEquipSlot)
 	EEquipmentSlots CurrentEquippedSlot;
+
+	UFUNCTION()
+	void OnRep_CurrentEquipSlot(EEquipmentSlots CurrentEquippedSlot_Old);
+
 	EEquipmentSlots PreviousEquippedSlot;
 
 	FDelegateHandle OnCurrentWeaponAmmoChangedHandle;
