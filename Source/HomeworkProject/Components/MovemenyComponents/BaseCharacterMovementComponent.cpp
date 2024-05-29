@@ -51,6 +51,12 @@ void UBaseCharacterMovementComponent::BeginPlay() {
 	CharacterOwner->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UBaseCharacterMovementComponent::OnPlayerCapsuleHit);
 }
 
+void UBaseCharacterMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
+{
+	Super::UpdateFromCompressedFlags(Flags);
+	bIsSprinting = (Flags &= FSavedMove_Character::FLAG_Custom_0) != 0;
+}
+
 void UBaseCharacterMovementComponent::StartSprint()
 {
 	bIsSprinting = true;
@@ -861,4 +867,82 @@ bool UBaseCharacterMovementComponent::IsHardFalling() const
 void UBaseCharacterMovementComponent::SetIsHardFalling(bool bIsHardFalling_In)
 {
 	bIsHardFalling = bIsHardFalling_In;
+}
+
+void FSavedMove_GC::Clear()
+{
+	Super::Clear();
+	bSavedIsSprinting = 0;
+}
+
+uint8 FSavedMove_GC::GetCompressedFlags() const
+{
+	uint8 Result = Super::GetCompressedFlags();
+
+	/*
+	 	FLAG_JumpPressed	= 0x01,	// Jump pressed
+		FLAG_WantsToCrouch	= 0x02,	// Wants to crouch
+		FLAG_Reserved_1		= 0x04,	// Reserved for future use
+		FLAG_Reserved_2		= 0x08,	// Reserved for future use
+		// Remaining bit masks are available for custom flags.
+		FLAG_Custom_0		= 0x10, // Sprinting flag
+		FLAG_Custom_1		= 0x20,
+		FLAG_Custom_2		= 0x40,
+		FLAG_Custom_3		= 0x80,
+	 */
+	if (bSavedIsSprinting)
+	{
+		Result |= FLAG_Custom_0;
+	}
+	return Result;
+}
+
+bool FSavedMove_GC::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter, float MaxDelta) const
+{
+	const FSavedMove_GC* NewMove = StaticCast<const FSavedMove_GC*>(NewMovePtr.Get());
+
+	if (bSavedIsSprinting != NewMove->bSavedIsSprinting)
+	{
+		return false;
+	}
+
+	return Super::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
+}
+
+void FSavedMove_GC::SetMoveFor(ACharacter* InCharacter, float InDeltaTime, FVector const& NewAccel, FNetworkPredictionData_Client_Character& ClientData)
+{
+	Super::SetMoveFor(InCharacter, InDeltaTime, NewAccel, ClientData);
+
+	UBaseCharacterMovementComponent* MovementComponent = StaticCast<UBaseCharacterMovementComponent*>(InCharacter->GetMovementComponent());
+
+	bSavedIsSprinting = MovementComponent->bIsSprinting;
+}
+
+void FSavedMove_GC::PrepMoveFor(ACharacter* Character)
+{
+	Super::PrepMoveFor(Character);
+
+	UBaseCharacterMovementComponent* MovementComponent = StaticCast<UBaseCharacterMovementComponent*>(Character->GetMovementComponent());
+
+	MovementComponent->bIsSprinting = bSavedIsSprinting;
+}
+
+FNetworkPredictionData_Client_Character_GC::FNetworkPredictionData_Client_Character_GC(const UCharacterMovementComponent& CharacterMovement)
+	: Super(CharacterMovement)
+{
+}
+
+FSavedMovePtr FNetworkPredictionData_Client_Character_GC::AllocateNewMove()
+{
+	return FSavedMovePtr(new FSavedMove_GC());
+}
+
+FNetworkPredictionData_Client* UBaseCharacterMovementComponent::GetPredictionData_Client() const
+{
+	if (ClientPredictionData == nullptr)
+	{
+		UBaseCharacterMovementComponent* MutableThis = const_cast<UBaseCharacterMovementComponent*>(this);
+		MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Character_GC(*this);
+	}
+	return ClientPredictionData;
 }
