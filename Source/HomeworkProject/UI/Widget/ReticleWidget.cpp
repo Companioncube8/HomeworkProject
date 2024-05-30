@@ -9,11 +9,11 @@
 void UReticleWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	checkf(GetOwningPlayer()->IsA<ABasePlayerController>(), TEXT("UReticleWidget::NativeConstruct() UReticleWidget can be used only with ABaseCharacter"));
-	ABasePlayerController* PlayerController = StaticCast<ABasePlayerController*>(GetOwningPlayer());
-	if (PlayerController->GetBaseCharacter()) {
-		PlayerController->GetBaseCharacter()->OnAimingStateChanged.AddUObject(this, &UReticleWidget::OnAimingStateChange);
-		PlayerController->GetBaseCharacter()->GetCharacterEquipmentComponent_Mutable()->OnEquippedItemChanged.AddUObject(this, &UReticleWidget::OnEquippedItemChanged);
+	checkf(GetOwningPlayerPawn()->IsA<ABaseCharacter>(), TEXT("UReticleWidget::NativeConstruct() UReticleWidget can be used only with ABaseCharacter"));
+	ABaseCharacter* Player = StaticCast<ABaseCharacter*>(GetOwningPlayerPawn());
+	if (Player) {
+		Player->OnAimingStateChanged.AddUObject(this, &UReticleWidget::OnAimingStateChange);
+		Player->GetCharacterEquipmentComponent_Mutable()->OnEquippedItemChanged.AddUObject(this, &UReticleWidget::OnEquippedItemChanged);
 	}
 }
 

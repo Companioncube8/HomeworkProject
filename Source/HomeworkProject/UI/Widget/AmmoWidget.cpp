@@ -10,11 +10,11 @@
 void UAmmoWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	checkf(GetOwningPlayer()->IsA<ABasePlayerController>(), TEXT("UAmmoWidget::NativeConstruct() UAmmoWidget can be used only with ABaseCharacter"));
-	ABasePlayerController* PlayerController = StaticCast<ABasePlayerController*>(GetOwningPlayer());
-	if (PlayerController->GetBaseCharacter()) {
-		PlayerController->GetBaseCharacter()->GetCharacterEquipmentComponent_Mutable()->OnCurrentWeaponAmmoChangedEvent.AddUObject(this, &UAmmoWidget::UpdateAmmoCount);
-		PlayerController->GetBaseCharacter()->GetCharacterEquipmentComponent_Mutable()->OnThrowableItemsCountChangedEvent.BindUObject(this, &UAmmoWidget::UpdateThrowableAmmoCount);
+	checkf(GetOwningPlayerPawn()->IsA<ABaseCharacter>(), TEXT("UAmmoWidget::NativeConstruct() UAmmoWidget can be used only with ABaseCharacter"));
+	ABaseCharacter* PlayerController = StaticCast<ABaseCharacter*>(GetOwningPlayerPawn());
+	if (PlayerController) {
+		PlayerController->GetCharacterEquipmentComponent_Mutable()->OnCurrentWeaponAmmoChangedEvent.AddUObject(this, &UAmmoWidget::UpdateAmmoCount);
+		PlayerController->GetCharacterEquipmentComponent_Mutable()->OnThrowableItemsCountChangedEvent.BindUObject(this, &UAmmoWidget::UpdateThrowableAmmoCount);
 	}
 }
 

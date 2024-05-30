@@ -9,19 +9,19 @@
 void UWidgetCharacterAttributes::NativeConstruct()
 {
 	Super::NativeConstruct();
-	checkf(GetOwningPlayer()->IsA<ABasePlayerController>(), TEXT("UWidgetCharacterAttributes::NativeConstruct() UWidgetCharacterAttributes can be used only with ABaseCharacter"));
-	ABasePlayerController* PlayerController = StaticCast<ABasePlayerController*>(GetOwningPlayer());
-	if (PlayerController->GetBaseCharacter()) {
+	checkf(GetOwningPlayerPawn()->IsA<ABaseCharacter>(), TEXT("UWidgetCharacterAttributes::NativeConstruct() UWidgetCharacterAttributes can be used only with ABaseCharacter"));
+	ABaseCharacter* Player = StaticCast<ABaseCharacter*>(GetOwningPlayerPawn());
+	if (Player) {
 		switch (WidgetType)
 		{
 		case EWidgetType::Health:
-			PlayerController->GetBaseCharacter()->GetCharacterAttributeComponent_Mutable()->OnHealthPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
+			Player->GetCharacterAttributeComponent_Mutable()->OnHealthPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
 			break;
 		case EWidgetType::Oxygen:
-			PlayerController->GetBaseCharacter()->GetCharacterAttributeComponent_Mutable()->OnOxigenPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
+			Player->GetCharacterAttributeComponent_Mutable()->OnOxigenPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
 			break;
 		case EWidgetType::Stamina:
-			PlayerController->GetBaseCharacter()->GetCharacterAttributeComponent_Mutable()->OnStaminaPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
+			Player->GetCharacterAttributeComponent_Mutable()->OnStaminaPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
 			break;
 		}
 	}

@@ -16,7 +16,7 @@ void ABasePlayerController::SetPawn(APawn* InPawn)
 {
 	Super::SetPawn(InPawn);
 	CachedBaseCharacter = Cast<ABaseCharacter>(InPawn);
-	if (IsLocalController())
+	if (IsLocalController() && InPawn)
 	{
 		CreateAndInitializeWidgets();
 	}
