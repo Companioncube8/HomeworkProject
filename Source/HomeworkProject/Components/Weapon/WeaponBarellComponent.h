@@ -77,6 +77,7 @@ struct FShotInfo
 	FVector GetDirection() const { return Direction; }
 };
 
+class AProjectile;
 class UNiagaraSystem;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HOMEWORKPROJECT_API UWeaponBarellComponent : public USceneComponent
@@ -91,6 +92,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
+	virtual void BeginPlay() override;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barell attributes | Damage")
 	UNiagaraSystem* MuzzleFlashFX;
 
@@ -109,6 +112,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barell attributes | Fire mode")
 	FFireInfo FireInfo;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barrel attributes | Hit registration", meta = (UIMin = 1, ClampMin = 1))
+	int ProjectilePoolSize = 10;
+
 private:
 	void ShotInternal(const TArray<FShotInfo>& ShotsInfos);
 	
@@ -121,6 +127,9 @@ private:
 	AController* GetController() const;
 
 	UFUNCTION()
+	void ProcessProjectileHit(AProjectile* Projectile, const FHitResult& HitResult, const FVector& Direction);
+
+	UFUNCTION()
 	void ProcessHit(const FHitResult& HitResult, const FVector& Direction);
 
 	UFUNCTION(Server, Reliable)
@@ -129,6 +138,14 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_LastShotsInfo)
 	TArray<FShotInfo> LastShotsInfo;
 
+	UPROPERTY(Replicated)
+	TArray<AProjectile*>ProjectilePool;
+
+	UPROPERTY(Replicated)
+	int32 CurrentProjectileIndex;
+
 	UFUNCTION()
 	void OnRep_LastShotsInfo();
+
+	const FVector ProjectilePoolLocation = FVector(0.f, 0.f, -100.f);
 };

@@ -17,6 +17,10 @@ AProjectile::AProjectile()
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComponent"));
 	ProjectileMovementComponent->InitialSpeed = 2000.f;
+	ProjectileMovementComponent->bAutoActivate = false;
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 void AProjectile::BeginPlay()
@@ -42,6 +46,11 @@ void AProjectile::OnCollisionHit(UPrimitiveComponent* HitComponent, AActor* Othe
 {
 	if (OnProjectileHit.IsBound())
 	{
-		OnProjectileHit.Broadcast(Hit, ProjectileMovementComponent->Velocity.GetSafeNormal());
+		OnProjectileHit.Broadcast(this, Hit, ProjectileMovementComponent->Velocity.GetSafeNormal());
 	}
+}
+
+void AProjectile::SetProjectileActive_Implementation(bool bIsProjectileActive)
+{
+	ProjectileMovementComponent->SetActive(bIsProjectileActive);
 }
