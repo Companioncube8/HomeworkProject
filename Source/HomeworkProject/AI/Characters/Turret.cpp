@@ -8,6 +8,7 @@
 
 #include "AIController.h"
 #include "Components/Weapon/WeaponBarellComponent.h"
+#include "Net/UnrealNetwork.h"
 // Sets default values
 ATurret::ATurret()
 {
@@ -28,7 +29,15 @@ ATurret::ATurret()
 	Health = MaxHealth;
 
 	this->OnTakeAnyDamage.AddDynamic(this, &ATurret::OnTakeAnyDamageEvent);
+	SetReplicates(true);
 }
+
+void ATurret::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATurret, CurrentTarget);
+}
+
 
 void ATurret::PossessedBy(AController* NewController)
 {
@@ -62,9 +71,8 @@ void ATurret::Tick(float DeltaTime)
 
 }
 
-void ATurret::SetCurrentTarget(AActor* NewTarget)
+void ATurret::OnCurrentTargetSet()
 {
-	CurrentTarget = NewTarget;
 	ETurretState NewState = CurrentTarget ? ETurretState::Firing : ETurretState::Searching;
 	SetCurrentTurretState(NewState);
 }
@@ -157,4 +165,9 @@ void ATurret::OnTakeAnyDamageEvent(AActor* DamagedActor, float Damage, const UDa
 			OnExplode.Broadcast();
 		}
 	}
+}
+
+void ATurret::OnRep_CurrentTarget()
+{
+	OnCurrentTargetSet();
 }

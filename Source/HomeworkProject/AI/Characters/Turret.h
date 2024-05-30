@@ -27,6 +27,8 @@ public:
 	// Sets default values for this pawn's properties
 	ATurret();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void Tick(float DeltaTime) override;
@@ -35,11 +37,14 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnExplode OnExplode;
 
-	void SetCurrentTarget(AActor* NewTarget);
+	void OnCurrentTargetSet();
 
 	virtual FVector GetPawnViewLocation() const override;
 
 	virtual FRotator GetViewRotation() const override;
+
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentTarget)
+	AActor* CurrentTarget = nullptr;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -90,8 +95,6 @@ private:
 	void SetCurrentTurretState(ETurretState NewState);
 	ETurretState CurrentTurretState = ETurretState::Searching;
 
-	AActor* CurrentTarget = nullptr;
-
 	float GetFireInterval() const;
 
 	FTimerHandle ShotTimer;
@@ -100,6 +103,9 @@ private:
 
 	UFUNCTION()
 	void OnTakeAnyDamageEvent(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	UFUNCTION()
+		void OnRep_CurrentTarget();
 
 	float Health = 0.f;
 };

@@ -35,5 +35,6 @@ void AAITurretController::ActorsPerceptionUpdated(const TArray<AActor*>& Updated
 	{
 		ClosestActor = DamageActor;
 	}
-	CachedTurret->SetCurrentTarget(ClosestActor);
+	CachedTurret->CurrentTarget = ClosestActor;
+	CachedTurret->OnCurrentTargetSet();
 }
