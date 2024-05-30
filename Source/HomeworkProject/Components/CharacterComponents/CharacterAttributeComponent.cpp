@@ -9,11 +9,19 @@
 #include "HomeworkProject/Characters/BaseCharacter.h"
 #include "HomeworkProject/Subsystems/DebugSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UCharacterAttributeComponent::UCharacterAttributeComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	SetIsReplicatedByDefault(true);
+}
+
+void UCharacterAttributeComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCharacterAttributeComponent, Health);
 }
 
 
@@ -30,7 +38,10 @@ void UCharacterAttributeComponent::BeginPlay()
 	Health = MaxHealth;
 	Oxygen = MaxOxygen;
 
-	CachedBaseCharacterOwner->OnTakeAnyDamage.AddDynamic(this, &UCharacterAttributeComponent::OnTakeAnyDamage);
+	if (GetOwner()->HasAuthority())
+	{
+		CachedBaseCharacterOwner->OnTakeAnyDamage.AddDynamic(this, &UCharacterAttributeComponent::OnTakeAnyDamage);
+	}
 }
 
 
@@ -51,18 +62,8 @@ void UCharacterAttributeComponent::OnTakeAnyDamage(AActor* DamagedActor, float D
 	}
 
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-	UE_LOG(LogDamage, Warning, TEXT("UCharacterAttributeComponent::OnTakeAnyDamage %s receive %.2f amount if damage from %s"), *CachedBaseCharacterOwner->GetName(), Damage, *DamageCauser->GetName())
-
-		OnHealthPercentChanged.ExecuteIfBound(Health / MaxHealth);
-
-	if (Health <= 0.f)
-	{
-		UE_LOG(LogDamage, Warning, TEXT("UCharacterAttributeComponent::OnTakeAnyDamage character %s is killed by an actor %s"), *CachedBaseCharacterOwner->GetName(), *DamageCauser->GetName())
-			if (OnDeathEvent.IsBound())
-			{
-				OnDeathEvent.Broadcast();
-			}
-	}
+	UE_LOG(LogDamage, Warning, TEXT("UCharacterAttributeComponent::OnTakeAnyDamage %s receive %.2f amount if damage from %s"), *CachedBaseCharacterOwner->GetName(), Damage, *DamageCauser->GetName());
+	OnHealthChanged();
 }
 
 #if UE_BUILD_DEBUG || UE_BUILD_DEVELOPMENT
@@ -137,4 +138,21 @@ void UCharacterAttributeComponent::UpdateOxygenValue(float DeltaTime, bool bIsUn
 float UCharacterAttributeComponent::GetHealthPercent() const
 {
 	return Health / MaxHealth;
+}
+
+void UCharacterAttributeComponent::OnRep_Health()
+{
+	OnHealthChanged();
+}
+
+void UCharacterAttributeComponent::OnHealthChanged()
+{
+	OnHealthPercentChanged.ExecuteIfBound(Health / MaxHealth);
+	if (Health <= 0.f)
+	{
+		if (OnDeathEvent.IsBound())
+		{
+			OnDeathEvent.Broadcast();
+		}
+	}
 }

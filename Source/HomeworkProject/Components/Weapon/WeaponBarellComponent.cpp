@@ -100,7 +100,7 @@ void UWeaponBarellComponent::LaunchProjectile(const FVector& LaunchStart, const 
 void UWeaponBarellComponent::ProcessHit(const FHitResult& HitResult, const FVector& Direction)
 {
 	AActor* HitActor = HitResult.GetActor();
-	if (IsValid(HitActor))
+	if (GetOwner()->HasAuthority() && IsValid(HitActor))
 	{
 		float DamageCoef = 1;
 		if (FalloffDiagram != nullptr) {

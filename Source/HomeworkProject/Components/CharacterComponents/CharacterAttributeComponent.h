@@ -17,6 +17,9 @@ class HOMEWORKPROJECT_API UCharacterAttributeComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UCharacterAttributeComponent();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	TMulticastDelegate<void()> OnDeathEvent;
@@ -63,7 +66,13 @@ protected:
 	float SwimOxygenConsumptionVelocity = 2.0f;
 
 private:
+	UPROPERTY(ReplicatedUsing=OnRep_Health)
 	float Health = 0.f;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	void OnHealthChanged();
 
 #if UE_BUILD_DEBUG || UE_BUILD_DEVELOPMENT
 	void DebugDrawAttributes();
