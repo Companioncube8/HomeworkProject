@@ -51,7 +51,7 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	LeftFootVectorLocation = FVector(CachedBaseCharacter->GetIKLeftFootOffset(), 0.f, 0.f);
 	HipVectorTranslation = FVector(0.f, 0.f, CachedBaseCharacter->GetIKHipOffset());
 
-	AimRotation = CachedBaseCharacter->GetBaseAimRotation();
+	AimRotation = CachedBaseCharacter->GetAimOffset();
 
 	const UCharacterEquipmentComponent* CharacterEquipment = CachedBaseCharacter->GetCharacterEquipmentComponent();
 	CurrentEquippedItemType = CharacterEquipment->GetCurrentEquippedItemType();

@@ -59,14 +59,36 @@ struct FFireInfo
 	float DamageAmount = 20.f;
 };
 
+USTRUCT(BlueprintType)
+struct FShotInfo
+{
+	GENERATED_BODY()
+
+	FShotInfo() : Location_Mul_10(FVector_NetQuantize100::ZeroVector), Direction(FVector_NetQuantizeNormal::ZeroVector){};
+	FShotInfo(FVector Location, FVector Direction) : Location_Mul_10(Location * 10), Direction(Direction) {};
+
+	UPROPERTY()
+	FVector_NetQuantize100 Location_Mul_10;
+
+	UPROPERTY()
+	FVector_NetQuantizeNormal Direction;
+
+	FVector GetLocation() const { return Location_Mul_10 * 0.1f; }
+	FVector GetDirection() const { return Direction; }
+};
+
 class UNiagaraSystem;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HOMEWORKPROJECT_API UWeaponBarellComponent : public USceneComponent
 {
 	GENERATED_BODY()
 public:
+	UWeaponBarellComponent();
+
 	void Shot(FVector ShotStart, FVector ShotDirection, float SpreadAngle);
 	void SetFireInfo(FFireInfo NewFireInfo) { FireInfo = NewFireInfo; }
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barell attributes | Damage")
@@ -88,6 +110,8 @@ protected:
 	FFireInfo FireInfo;
 
 private:
+	void ShotInternal(const TArray<FShotInfo>& ShotsInfos);
+	
 	FVector GetBulletSpreadOffset(float Angle, FRotator ShotRotation) const;
 
 	bool HitScan(FVector ShotStart, FVector ShotDirection, FVector& ShotEnd);
@@ -98,4 +122,13 @@ private:
 
 	UFUNCTION()
 	void ProcessHit(const FHitResult& HitResult, const FVector& Direction);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Shot(const TArray<FShotInfo>& ShotsInfos);
+
+	UPROPERTY(ReplicatedUsing = OnRep_LastShotsInfo)
+	TArray<FShotInfo> LastShotsInfo;
+
+	UFUNCTION()
+	void OnRep_LastShotsInfo();
 };

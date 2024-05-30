@@ -79,8 +79,14 @@ private:
 	UFUNCTION()
 	void OnCurrentWeaponAmmoChanged(int32 Ammo);
 
-	TAmmunitionArray AmmunitionArray;
-	TItemsArray ItemsArray;
+	UPROPERTY(Replicated)
+	TArray<int32> AmmunitionArray;
+
+	UPROPERTY(ReplicatedUsing=OnRep_ItemsArray)
+	TArray<AEquipableItem *> ItemsArray;
+
+	UFUNCTION()
+	void OnRep_ItemsArray();
 
 	int32 GetAvailableAmunitionForCurrentWeapon();
 

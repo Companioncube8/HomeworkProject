@@ -180,6 +180,7 @@ public:
 
 	/** ~IGenericTeamAgentInterface**/
 
+	FRotator GetAimOffset();
 
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")

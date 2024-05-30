@@ -755,3 +755,12 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABaseCharacter, bIsMantling);
 }
+
+FRotator ABaseCharacter::GetAimOffset()
+{
+	FVector AimDirectionWorld = GetBaseAimRotation().Vector();
+	FVector AimDirectionLocal = GetTransform().InverseTransformVectorNoScale(AimDirectionWorld);
+	FRotator Result = AimDirectionLocal.ToOrientationRotator();
+
+	return Result;
+}

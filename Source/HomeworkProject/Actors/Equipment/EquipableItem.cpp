@@ -3,6 +3,11 @@
 
 #include "EquipableItem.h"
 
+AEquipableItem::AEquipableItem()
+{
+	SetReplicates(true);
+}
+
 
 EEquipableItemType AEquipableItem::GetItemType() const
 {
@@ -52,6 +57,10 @@ void AEquipableItem::SetOwner(AActor* NewOwner)
 	{
 		checkf(GetOwner()->IsA<ABaseCharacter>(), TEXT("AEquipableItem::SetOwner() only character can be owner of an equipable item"))
 		CachedCharacterOwner = StaticCast<ABaseCharacter*>(GetOwner());
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			SetAutonomousProxy(true);
+		}
 	} else
 	{
 		CachedCharacterOwner = nullptr;
