@@ -50,6 +50,7 @@ public:
 	void LaunchCurrentThrowableItem();
 
 	void ChangeCurrentWeaponFireMode();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -64,6 +65,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lodout")
 	EEquipmentSlots AutoEqupItemInSlot = EEquipmentSlots::None;
+
 
 private:
 	UFUNCTION(Server, Reliable)
@@ -82,8 +84,8 @@ private:
 	UPROPERTY(Replicated)
 	TArray<int32> AmmunitionArray;
 
-	UPROPERTY(ReplicatedUsing=OnRep_ItemsArray)
-	TArray<AEquipableItem *> ItemsArray;
+	UPROPERTY(ReplicatedUsing = OnRep_ItemsArray)
+	TArray<AEquipableItem*> ItemsArray;
 
 	UFUNCTION()
 	void OnRep_ItemsArray();
@@ -98,7 +100,7 @@ private:
 	AThrowableItem* CurrentThrowableItem;
 	AMeleeWeaponItem* CurrentMeleeWeapon;
 
-	UPROPERTY(ReplicatedUsing=OnRep_CurrentEquipSlot)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentEquipSlot)
 	EEquipmentSlots CurrentEquippedSlot;
 
 	UFUNCTION()
@@ -116,4 +118,5 @@ private:
 	FTimerHandle EquipTimer;
 
 	void AutoEquip();
+
 };

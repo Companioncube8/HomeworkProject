@@ -7,22 +7,24 @@
 
 void UExplosionComponent::Explode(AController* Controller)
 {
-	TArray<AActor*> IgnoredActors;
-	IgnoredActors.Add(GetOwner());
-	UGameplayStatics::ApplyRadialDamageWithFalloff(
-		GetWorld(), 
-		MaxDamage, 
-		MinDamage, 
-		GetComponentLocation(), 
-		InnerRadius, 
-		OuterRadius, 
-		DamageFalloff, 
-		DamageTypeClass, 
-		IgnoredActors, 
-		GetOwner(),
-		Controller,
-		ECC_Visibility
-	);
+	if (GetOwner()->HasAuthority()) {
+		TArray<AActor*> IgnoredActors;
+		IgnoredActors.Add(GetOwner());
+		UGameplayStatics::ApplyRadialDamageWithFalloff(
+			GetWorld(),
+			MaxDamage,
+			MinDamage,
+			GetComponentLocation(),
+			InnerRadius,
+			OuterRadius,
+			DamageFalloff,
+			DamageTypeClass,
+			IgnoredActors,
+			GetOwner(),
+			Controller,
+			ECC_Visibility
+		);
+	}
 
 	if (IsValid(ExplosionVFX))
 	{

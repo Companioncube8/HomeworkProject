@@ -5,6 +5,25 @@
 
 #include "Actors/Projectiles/Projectile.h"
 #include "Characters/BaseCharacter.h"
+#include "Net/UnrealNetwork.h"
+
+AThrowableItem::AThrowableItem()
+{
+	SetReplicates(true);
+}
+
+void AThrowableItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AThrowableItem, ProjectilePool);
+
+	FDoRepLifetimeParams RepLifetimeParams;
+	RepLifetimeParams.Condition = COND_SimulatedOnly;
+	RepLifetimeParams.RepNotifyCondition = REPNOTIFY_Always;
+	DOREPLIFETIME_WITH_PARAMS(AThrowableItem, LastThrowInfo, RepLifetimeParams);
+}
+
+
 
 void AThrowableItem::Throw()
 {
@@ -13,26 +32,16 @@ void AThrowableItem::Throw()
 	{
 		return;
 	}
-
+	APlayerController* Controller = CharacterOwner->GetController<APlayerController>();
+	if (!IsValid(Controller))
+	{
+		return;
+	}
 
 	FVector PlayerViewPoint;
 	FRotator PlayerViewRotation;
 
-	if (CharacterOwner->IsPlayerControlled())
-	{
-		APlayerController* Controller = CharacterOwner->GetController<APlayerController>();
-		if (!IsValid(Controller))
-		{
-			return;
-		}
-
-
-		Controller->GetPlayerViewPoint(PlayerViewPoint, PlayerViewRotation);
-	} else
-	{
-		PlayerViewPoint = CharacterOwner->GetMesh()->GetSocketLocation(SocketCharacterThrowable);
-		PlayerViewRotation = CharacterOwner->GetBaseAimRotation();
-	}
+	Controller->GetPlayerViewPoint(PlayerViewPoint, PlayerViewRotation);
 
 	FTransform PlayerViewTransform(PlayerViewRotation, PlayerViewPoint);
 
@@ -46,9 +55,62 @@ void AThrowableItem::Throw()
 
 	FVector SpawnLocation = PlayerViewPoint + ViewDirection * SocketInViewSpace.X;
 
-	if (AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, SpawnLocation, FRotator::ZeroRotator))
+	FThrowInfo ThrowInfo = FThrowInfo(SpawnLocation, LaunchDirection);
+
+	if (CharacterOwner->GetLocalRole() == ROLE_AutonomousProxy)
 	{
-		Projectile->SetOwner(GetOwner());
-		Projectile->LaunchProjectile(LaunchDirection.GetSafeNormal());
+		Server_Throw(ThrowInfo);
 	}
+	SetProjectile(ThrowInfo);
+}
+
+void AThrowableItem::CreateProjectilePool()
+{
+	if (!GetOwner())
+	{
+		return;
+	}
+
+	if (GetOwner()->GetLocalRole() < ROLE_Authority)
+	{
+		return;
+	}
+
+	ProjectilePool.Reserve(ThrowablePoolSize);
+
+	for (int32 i = 0; i < ThrowablePoolSize; ++i)
+	{
+		AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectilePoolLocation, FRotator::ZeroRotator);
+		Projectile->SetOwner(GetOwner());
+		ProjectilePool.Add(Projectile);
+	}
+}
+
+void AThrowableItem::SetProjectile(const FThrowInfo& ThrowInfo)
+{
+	if (GetCharacterOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		LastThrowInfo = ThrowInfo;
+	}
+	AProjectile* Projectile = ProjectilePool[CurrentProjectileIndex];
+	++CurrentProjectileIndex;
+	if (CurrentProjectileIndex == ProjectilePool.Num())
+	{
+		CurrentProjectileIndex = 0;
+	}
+	Projectile->SetOwner(GetOwner());
+	Projectile->SetActorLocation(ThrowInfo.GetLocation());
+	Projectile->SetActorRotation(ThrowInfo.GetDirection().ToOrientationRotator());
+	Projectile->LaunchProjectile(ThrowInfo.GetDirection().GetSafeNormal());
+	Projectile->SetProjectileActive(true);
+}
+
+void AThrowableItem::Server_Throw_Implementation(const FThrowInfo& ThrowInfo)
+{
+	SetProjectile(ThrowInfo);
+}
+
+void AThrowableItem::OnRep_LastThrowInfo()
+{
+	SetProjectile(LastThrowInfo);
 }

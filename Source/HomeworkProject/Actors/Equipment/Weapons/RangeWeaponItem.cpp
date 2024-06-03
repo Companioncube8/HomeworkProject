@@ -32,6 +32,8 @@ void ARangeWeaponItem::BeginPlay()
 		Ammo[i] = FireModes[i].MaxAmmo;
 	}
 	SetAmmo(CurrentFireMode().MaxAmmo);
+	WeaponBarell->SetFireInfo(CurrentFireMode().FireInfo);
+	WeaponBarell->CreateProjectilePool();
 }
 
 void ARangeWeaponItem::StartFire()

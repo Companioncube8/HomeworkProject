@@ -32,7 +32,10 @@ void UWeaponBarellComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 void UWeaponBarellComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
+void UWeaponBarellComponent::CreateProjectilePool()
+{
 	if (GetOwnerRole() < ROLE_Authority)
 	{
 		return;
@@ -53,6 +56,7 @@ void UWeaponBarellComponent::BeginPlay()
 		ProjectilePool.Add(Projectile);
 	}
 }
+
 
 
 

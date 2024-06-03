@@ -80,6 +80,8 @@ public:
 	bool IsFiring() const { return bIsFiring; };
 	bool IsReloading() const { return bIsReloading; };
 
+	bool CanUseAmmo() const { return Ammo.Num() > 0; }
+
 	void StartAim();
 	void StopAim();
 
@@ -142,7 +144,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Reticle")
 	EReticleType AimReticleType = EReticleType::Default;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Fire mode")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Fire mode")
 	TArray<FFireModeInfo> FireModes;
 private:
 	TArray<int32> Ammo;
