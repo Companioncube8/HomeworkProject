@@ -274,6 +274,7 @@ public:
 private:
 	uint8 bSavedIsSprinting : 1;
 	uint8 bSavedIsMantling : 1;
+	uint8 bSavedIsSliding : 1;
 };
 
 class FNetworkPredictionData_Client_Character_GC : public  FNetworkPredictionData_Client_Character

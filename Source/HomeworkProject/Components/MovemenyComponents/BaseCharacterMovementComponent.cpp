@@ -66,6 +66,17 @@ void UBaseCharacterMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 			GetBaseCharacterOwner()->Mantle(true);
 		}
 	}
+
+	bool bWasSliding = GetBaseCharacterOwner()->bIsSliding;
+	bool bIsSliding = (Flags & FSavedMove_Character::FLAG_Custom_2) != 0;
+
+	if (GetBaseCharacterOwner()->GetLocalRole() == ROLE_Authority)
+	{
+		if (!bWasSliding && bIsSliding)
+		{
+			GetBaseCharacterOwner()->Slide();
+		}
+	}
 }
 
 void UBaseCharacterMovementComponent::StartSprint()
@@ -856,6 +867,8 @@ void UBaseCharacterMovementComponent::StopSlide()
 		StopSprint();
 	}
 
+	GetBaseCharacterOwner()->bIsSliding = false;
+
 	APlayerCharacter* Character = StaticCast<APlayerCharacter*>(CharacterOwner);
 	const FVector PawnLocation = UpdatedComponent->GetComponentLocation();
 	ACharacter* DefaultCharacter = GetCharacterOwner()->GetClass()->GetDefaultObject<ACharacter>();
@@ -893,6 +906,7 @@ void FSavedMove_GC::Clear()
 	Super::Clear();
 	bSavedIsSprinting = 0;
 	bSavedIsMantling = 0;
+	bSavedIsSliding = 0;
 }
 
 uint8 FSavedMove_GC::GetCompressedFlags() const
@@ -907,7 +921,7 @@ uint8 FSavedMove_GC::GetCompressedFlags() const
 		// Remaining bit masks are available for custom flags.
 		FLAG_Custom_0		= 0x10, // Sprinting flag
 		FLAG_Custom_1		= 0x20, // Mantling
-		FLAG_Custom_2		= 0x40,
+		FLAG_Custom_2		= 0x40, // Slide
 		FLAG_Custom_3		= 0x80,
 	 */
 	if (bSavedIsSprinting)
@@ -918,6 +932,10 @@ uint8 FSavedMove_GC::GetCompressedFlags() const
 	{
 		Result &= ~FLAG_JumpPressed;
 		Result |= FLAG_Custom_1;
+	}
+	if (bSavedIsSliding)
+	{
+		Result |= FLAG_Custom_2;
 	}
 	return Result;
 }
@@ -936,6 +954,11 @@ bool FSavedMove_GC::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* 
 		return false;
 	}
 
+	if (bSavedIsSliding != NewMove->bSavedIsSliding)
+	{
+		return false;
+	}
+
 	return Super::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
 }
 
@@ -949,6 +972,7 @@ void FSavedMove_GC::SetMoveFor(ACharacter* InCharacter, float InDeltaTime, FVect
 
 	bSavedIsSprinting = MovementComponent->bIsSprinting;
 	bSavedIsMantling = InBaseCharacter->bIsMantling;
+	bSavedIsSliding = InBaseCharacter->bIsSliding;
 }
 
 void FSavedMove_GC::PrepMoveFor(ACharacter* Character)

@@ -91,6 +91,13 @@ public:
 	void OnRep_IsMantling(bool bWasMantling);
 
 	virtual void Slide();
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsSliding)
+	bool bIsSliding;
+
+	UFUNCTION()
+	void OnRep_IsSliding(bool bWasSliding);
+
 	virtual void AlternativeFire();
 
 	virtual void PrimaryMeleeAttack();

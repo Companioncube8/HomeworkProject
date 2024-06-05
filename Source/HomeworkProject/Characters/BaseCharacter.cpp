@@ -485,6 +485,9 @@ void ABaseCharacter::Slide()
 	{
 		return;
 	}
+
+	bIsSliding = true;
+
 	BaseCharacterMovementComponent->StartSlide();
 }
 
@@ -750,10 +753,20 @@ void ABaseCharacter::OnRep_IsMantling(bool bWasMantling)
 	}
 }
 
+void ABaseCharacter::OnRep_IsSliding(bool bWasSliding)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy && !bWasSliding && bIsSliding)
+	{
+		BaseCharacterMovementComponent->StartSlide();
+	}
+}
+
+
 void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABaseCharacter, bIsMantling);
+	DOREPLIFETIME(ABaseCharacter, bIsSliding);
 }
 
 FRotator ABaseCharacter::GetAimOffset()
