@@ -74,6 +74,8 @@ class HOMEWORKPROJECT_API ARangeWeaponItem : public AEquipableItem
 public:
 	ARangeWeaponItem();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	void StartFire();
 	void StopFire();
 
@@ -108,11 +110,14 @@ public:
 	FOnAmmoChanged OnAmmoChanged;
 	FOnReloadComplete OnReloadComplete;
 
+	void CreateFireModes();
+
 	virtual EReticleType GetReticleType() const override;
 
 	void ChangeFireMode();
 protected:
 	virtual void BeginPlay() override;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USkeletalMeshComponent* WeaponMesh;
@@ -147,6 +152,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Fire mode")
 	TArray<FFireModeInfo> FireModes;
 private:
+
+	UPROPERTY(Replicated)
 	TArray<int32> Ammo;
 
 	bool bIsFiring = false;
@@ -172,5 +179,28 @@ private:
 
 	FFireModeInfo CurrentFireMode() const { return FireModes[IndexCurrentFireMode]; };
 
+	UPROPERTY(Replicated)
 	int32 IndexCurrentFireMode = 0;
+
+	UFUNCTION(Server, Reliable)
+	void Server_Reload();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Reload();
+
+	void ReloadAmmo();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ChangeAmmo(int32 Index, int32 Value);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ChangeAmmo(int32 Index, int32 Value);
+
+	UFUNCTION(Server, Reliable)
+	void Server_EndReload(bool bIsSuccess);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_EndReload(bool bIsSuccess);
+
+	void EndReloadReplicated(bool bIsSuccess);
 };

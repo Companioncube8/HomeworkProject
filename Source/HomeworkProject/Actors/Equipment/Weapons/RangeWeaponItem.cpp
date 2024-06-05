@@ -6,6 +6,8 @@
 #include "HomeworkProjectTypes.h"
 #include "Characters/BaseCharacter.h"
 #include "Components/Weapon/WeaponBarellComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 ARangeWeaponItem::ARangeWeaponItem()
 {
@@ -20,18 +22,27 @@ ARangeWeaponItem::ARangeWeaponItem()
 	ReticleType = EReticleType::Default;
 
 	EquippedSocketName = SocketCharacterWeapon;
-
+	SetReplicates(true);
 }
+
+void ARangeWeaponItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+	DOREPLIFETIME_WITH_PARAMS(ARangeWeaponItem, Ammo, Params);
+}
+
 
 void ARangeWeaponItem::BeginPlay()
 {
 	Super::BeginPlay();
+
 	Ammo.AddZeroed(FireModes.Num());
 	for (int i = 0; i < FireModes.Num(); i++)
 	{
 		Ammo[i] = FireModes[i].MaxAmmo;
 	}
-	SetAmmo(CurrentFireMode().MaxAmmo);
 	WeaponBarell->SetFireInfo(CurrentFireMode().FireInfo);
 	WeaponBarell->CreateProjectilePool();
 }
@@ -179,10 +190,14 @@ int32 ARangeWeaponItem::GetAmmo() const
 
 void ARangeWeaponItem::SetAmmo(int32 NewAmmo)
 {
-	Ammo[IndexCurrentFireMode] = NewAmmo;
-	if (OnAmmoChanged.IsBound())
-	{
-		OnAmmoChanged.Broadcast(Ammo[IndexCurrentFireMode]);
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled()) {
+		Ammo[IndexCurrentFireMode] = NewAmmo;
+		Server_ChangeAmmo(IndexCurrentFireMode, NewAmmo);
+		if (OnAmmoChanged.IsBound())
+		{
+			OnAmmoChanged.Broadcast(Ammo[IndexCurrentFireMode]);
+		}
 	}
 }
 
@@ -202,6 +217,12 @@ int32 ARangeWeaponItem::GetMaxAmmo() const
 }
 
 void ARangeWeaponItem::StartReload()
+{
+	ReloadAmmo();
+	Server_Reload();
+}
+
+void ARangeWeaponItem::ReloadAmmo()
 {
 	ABaseCharacter* CharacterOwner = GetCharacterOwner();
 	if (!CharacterOwner)
@@ -227,11 +248,16 @@ void ARangeWeaponItem::StartReload()
 
 void ARangeWeaponItem::EndReload(bool bIsSuccess)
 {
+	EndReloadReplicated(bIsSuccess);
+	Server_EndReload(bIsSuccess);
+}
+
+void ARangeWeaponItem::EndReloadReplicated(bool bIsSuccess)
+{
 	if (!bIsReloading)
 	{
 		return;
 	}
-
 
 	ABaseCharacter* CharacterOwner = GetCharacterOwner();
 
@@ -313,3 +339,50 @@ void ARangeWeaponItem::ChangeFireMode()
 	}
 	WeaponBarell->SetFireInfo(CurrentFireMode().FireInfo);
 }
+
+void ARangeWeaponItem::Server_Reload_Implementation()
+{
+	Multicast_Reload();
+}
+
+void ARangeWeaponItem::Multicast_Reload_Implementation()
+{
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled())
+	{
+		return;
+	}
+	ReloadAmmo();
+}
+
+void ARangeWeaponItem::Server_ChangeAmmo_Implementation(int32 Index, int32 Value)
+{
+	Ammo[Index] = Value;
+	Multicast_ChangeAmmo(Index, Value);
+}
+
+void ARangeWeaponItem::Multicast_ChangeAmmo_Implementation(int32 Index, int32 Value)
+{
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled())
+	{
+		return;
+	}
+	Ammo[Index] = Value;
+}
+
+void ARangeWeaponItem::Server_EndReload_Implementation(bool bIsSuccess)
+{
+	Multicast_EndReload(bIsSuccess);
+}
+
+void ARangeWeaponItem::Multicast_EndReload_Implementation(bool bIsSuccess)
+{
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled())
+	{
+		return;
+	}
+	EndReloadReplicated(bIsSuccess);
+}
+

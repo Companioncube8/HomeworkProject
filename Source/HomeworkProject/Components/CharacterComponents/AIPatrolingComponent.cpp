@@ -12,7 +12,7 @@ bool UAIPatrollingComponent::CanPatrol() const
 FVector UAIPatrollingComponent::SelectClosestWaypoint()
 {
 	FVector OwnerLocation = GetOwner()->GetActorLocation();
-	const TArray<FVector> WayPoints = PatrolingPathInfo.PatrolingPath->GetWayPoints();
+	const TArray<FVector>& WayPoints = PatrolingPathInfo.PatrolingPath->GetWayPoints();
 	FTransform PathTransform = PatrolingPathInfo.PatrolingPath->GetActorTransform();
 
 	FVector ClosestWayPoint;
@@ -33,22 +33,16 @@ FVector UAIPatrollingComponent::SelectClosestWaypoint()
 
 FVector UAIPatrollingComponent::SelectNextWaypoint()
 {
-	const TArray<FVector> WayPoints = PatrolingPathInfo.PatrolingPath->GetWayPoints();
+	const TArray<FVector>& WayPoints = PatrolingPathInfo.PatrolingPath->GetWayPoints();
 
-	if (PatrolingPathInfo.PatrolingPath->GetWayPoints().Num() == 1)
+	if (WayPoints.Num() == 1)
 	{
 		CurrentWayPointIndex = 0;
 		FTransform PathTransform = PatrolingPathInfo.PatrolingPath->GetActorTransform();
 		return PathTransform.TransformPosition(WayPoints[CurrentWayPointIndex]);
 	}
 
-	if (bIsNeedGoBack)
-	{
-		--CurrentWayPointIndex;
-	} else
-	{
-		++CurrentWayPointIndex;
-	}
+	CurrentWayPointIndex += bIsNeedGoBack ? -1 : 1;
 
 	switch (PatrolingPathInfo.Type)
 	{

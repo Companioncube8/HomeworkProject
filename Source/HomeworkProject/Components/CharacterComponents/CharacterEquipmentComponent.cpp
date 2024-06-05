@@ -25,8 +25,6 @@ void UCharacterEquipmentComponent::BeginPlay()
 
 }
 
-
-
 void UCharacterEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -154,6 +152,7 @@ void UCharacterEquipmentComponent::UnEquipCurrentItem()
 		CurrentEquippedWeapon->OnReloadComplete.Remove(OnCurrentReloadAmmoChangedHandle);
 	}
 
+	PreviousEquippedSlot = CurrentEquippedSlot;
 	CurrentEquippedSlot = EEquipmentSlots::None;
 }
 
@@ -181,11 +180,6 @@ void UCharacterEquipmentComponent::EquipItemInSlot(EEquipmentSlots Slot)
 	if ((uint32)Slot >= (uint32)ItemsArray.Num())
 	{
 		return;
-	}
-
-	if (Slot == EEquipmentSlots::PrimaryItemSlot)
-	{
-		PreviousEquippedSlot = CurrentEquippedSlot;
 	}
 
 	UnEquipCurrentItem();
