@@ -355,7 +355,4 @@ void ABasePlayerController::CreateAndInitializeWidgets()
 	{
 		MainMenuWidget = CreateWidget<UUserWidget>(GetWorld(), MainMenuWidgetClass);
 	}
-
-	SetInputMode(FInputModeGameOnly{});
-	bShowMouseCursor = false;
 }

@@ -7,14 +7,29 @@ public class HomeworkProject : ModuleRules
 	public HomeworkProject(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "TraceServices", "Niagara", "UMG", "GameplayTasks", "NavigationSystem" });
+
+		PublicDependencyModuleNames.AddRange(new string[] {
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"Niagara",
+			"UMG",
+			"GameplayTasks",
+			"NavigationSystem",
+			"OnlineSubsystem",
+			"OnlineSubsystemUtils"
+		});
+
+		DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");
+
+		PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PrivateIncludePaths.AddRange(new string[] { Name });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

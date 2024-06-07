@@ -29,6 +29,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<class UPlayerHUDWidget> PlayerHudWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
+	TSubclassOf<class UUserWidget> MainMenuWidgetClass;
+
 private:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -72,10 +75,12 @@ private:
 	
 	TSoftObjectPtr<class ABaseCharacter> CachedBaseCharacter;
 
+	void ToggleMainMenu();
 private:
 	bool bIgnoreCameraPitch = false;
 
 	UPlayerHUDWidget* PlayerHUDWidget = nullptr;
+	UUserWidget* MainMenuWidget = nullptr;
 
 	void CreateAndInitializeWidgets();
 };
