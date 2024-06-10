@@ -15,7 +15,7 @@ void UWidgetCharacterAttributes::NativeConstruct()
 		switch (WidgetType)
 		{
 		case EWidgetType::Health:
-			Player->GetCharacterAttributeComponent_Mutable()->OnHealthPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
+			Player->GetCharacterAttributeComponent_Mutable()->OnHealthChangedEvent.AddUObject(this, &UWidgetCharacterAttributes::UpdatePercent);
 			break;
 		case EWidgetType::Oxygen:
 			Player->GetCharacterAttributeComponent_Mutable()->OnOxigenPercentChanged.BindUObject(this, &UWidgetCharacterAttributes::UpdatePercent);

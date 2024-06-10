@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class UWidgetComponent;
 class IInteractable;
 class UBaseCharacterMovementComponent;
 
@@ -197,6 +198,12 @@ public:
 
 	FOnInteractableObjectFound OnInteractableObjectFound;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = "Character | Components")
+	UWidgetComponent* HealthBarProgressComponent;
+
+	void InitializeHealthProgress();
+
+	virtual void BeginPlay() override;
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();

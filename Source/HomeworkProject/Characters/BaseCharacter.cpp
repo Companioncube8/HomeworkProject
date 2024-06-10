@@ -8,6 +8,7 @@
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Actors/Interactive/Interface/Interactive.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
 #include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,6 +21,7 @@
 #include "HomeworkProject/Components/CharacterComponents/CharacterAttributeComponent.h"
 #include "HomeworkProject/HomeworkProjectTypes.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/Widget/World/AttributeProgressBar.h"
 
 
 ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
@@ -43,6 +45,34 @@ ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
 	CharacterAttributesComponent->OnDeathEvent.AddUObject(this, &ABaseCharacter::OnDeath);
 	CharacterAttributesComponent->OnOutOfStamina.AddUObject(this, &ABaseCharacter::OnOutOfStamina);
 	CharacterAttributesComponent->OnOutOfOxigen.AddUObject(this, &ABaseCharacter::OnOutOfOxigen);
+
+	HealthBarProgressComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarProgressComponent"));
+	HealthBarProgressComponent->SetupAttachment(GetCapsuleComponent());
+}
+
+void ABaseCharacter::InitializeHealthProgress()
+{
+	UAttributeProgressBar* Widget = Cast<UAttributeProgressBar>(HealthBarProgressComponent->GetUserWidgetObject());
+	if (!Widget)
+	{
+		HealthBarProgressComponent->SetVisibility(false);
+		return;
+	}
+
+	if (IsPlayerControlled() && IsLocallyControlled())
+	{
+		HealthBarProgressComponent->SetVisibility(false);
+	}
+	CharacterAttributesComponent->OnHealthChangedEvent.AddUObject(Widget, &UAttributeProgressBar::SetProgressPercentage);
+	CharacterAttributesComponent->OnDeathEvent.AddLambda([=]() {HealthBarProgressComponent->SetVisibility(false);});
+	Widget->SetProgressPercentage(CharacterAttributesComponent->GetHealthPercent());
+}
+
+void ABaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	CharacterAttributesComponent->OnDeathEvent.AddUObject(this, &ABaseCharacter::OnDeath);
+	InitializeHealthProgress();
 }
 
 void ABaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)

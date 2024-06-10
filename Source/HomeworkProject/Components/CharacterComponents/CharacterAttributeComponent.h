@@ -8,6 +8,7 @@
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnOutOfStamina, bool)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnOutOfOxigen, bool)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HOMEWORKPROJECT_API UCharacterAttributeComponent : public UActorComponent
@@ -25,8 +26,8 @@ public:
 	TMulticastDelegate<void()> OnDeathEvent;
 	FOnOutOfStamina OnOutOfStamina;
 	FOnOutOfOxigen OnOutOfOxigen;
+	FOnHealthChanged OnHealthChangedEvent;
 
-	TDelegate<void(float)>OnHealthPercentChanged;
 	TDelegate<void(float)>OnOxigenPercentChanged;
 	TDelegate<void(float)>OnStaminaPercentChanged;
 
