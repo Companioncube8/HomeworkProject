@@ -24,6 +24,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual bool HasOnInteractionCallback() const override;
+	virtual FDelegateHandle AddOnInteractionUFunction(UObject* Object, const FName& FunctionName) override;
+	virtual void RemoveOnInteractionDelegate(FDelegateHandle DelegateHandle) override;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interective | Door")
 	UStaticMeshComponent* DoorMesh;
@@ -42,6 +46,8 @@ protected:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	IInteractable::FOnInteraction OnInteractionEvent;
 
 private:
 	void InteractWithDoot();

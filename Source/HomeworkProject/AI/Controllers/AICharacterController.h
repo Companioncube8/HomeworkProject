@@ -25,8 +25,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	float TargetReachRadius = 100.f;
 
-	virtual void BeginPlay() override;
-
 private:
 	void TryMoveToNextTarget();
 
@@ -35,4 +33,6 @@ private:
 	TWeakObjectPtr<AAICharacter> CachedAICharacter;
 
 	bool bIsPatroling = false;
+
+	void SetupPatrolling();
 };

@@ -79,4 +79,24 @@ void ADoor::Interact(ABaseCharacter* Character)
 {
 	ensureMsgf(DoorAnimationCurve, TEXT("Dore animation curve is not set"));
 	InteractWithDoot();
+	if (OnInteractionEvent.IsBound())
+	{
+		OnInteractionEvent.Broadcast();
+	}
 }
+
+bool ADoor::HasOnInteractionCallback() const
+{
+	return true;
+}
+
+FDelegateHandle ADoor::AddOnInteractionUFunction(UObject* Object, const FName& FunctionName)
+{
+	return OnInteractionEvent.AddUFunction(Object, FunctionName);
+}
+
+void ADoor::RemoveOnInteractionDelegate(FDelegateHandle DelegateHandle)
+{
+	OnInteractionEvent.Remove(DelegateHandle);
+}
+

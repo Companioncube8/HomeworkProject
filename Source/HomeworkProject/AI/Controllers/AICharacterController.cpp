@@ -16,6 +16,7 @@ void AAICharacterController::SetPawn(APawn* InPawn)
 		checkf(InPawn->IsA<AAICharacter>(), TEXT("AAICharacterController::SetPawn AAICharacterController can possess only AAICharacter"));
 		CachedAICharacter = StaticCast<AAICharacter*>(InPawn);
 		RunBehaviorTree(CachedAICharacter->GetBehaviorTree());
+		SetupPatrolling();
 	}
 	else
 	{
@@ -33,9 +34,8 @@ void AAICharacterController::ActorsPerceptionUpdated(const TArray<AActor*>& Upda
 	TryMoveToNextTarget();
 }
 
-void AAICharacterController::BeginPlay()
+void AAICharacterController::SetupPatrolling()
 {
-	Super::BeginPlay();
 	UAIPatrollingComponent* PatrollingComponent = CachedAICharacter->GetPatrollingComponent();
 	if (PatrollingComponent->CanPatrol())
 	{
@@ -48,6 +48,7 @@ void AAICharacterController::BeginPlay()
 		bIsPatroling = true;
 	}
 }
+
 
 void AAICharacterController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
