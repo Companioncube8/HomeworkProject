@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "Actors/Environment/PlatformTrigger.h"
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
+#include "Actors/Interactive/Interface/Interactive.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
 #include "Curves/CurveVector.h"
@@ -43,6 +44,16 @@ ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
 	CharacterAttributesComponent->OnOutOfStamina.AddUObject(this, &ABaseCharacter::OnOutOfStamina);
 	CharacterAttributesComponent->OnOutOfOxigen.AddUObject(this, &ABaseCharacter::OnOutOfOxigen);
 }
+
+void ABaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (OnInteractableObjectFound.IsBound())
+	{
+		OnInteractableObjectFound.Unbind();
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
 
 void ABaseCharacter::PossessedBy(AController* NewController)
 {
@@ -97,6 +108,8 @@ void ABaseCharacter::Tick(float DeltaSeconds)
 
 	CharacterAttributesComponent->UpdateStaminaValue(DeltaSeconds, BaseCharacterMovementComponent->IsSprinting());
 	CharacterAttributesComponent->UpdateOxygenValue(DeltaSeconds, IsSwimmingUnderWater());
+
+	TraceLineOfSight();
 }
 
 void ABaseCharacter::OnSprintChanged(bool isSprint)
@@ -776,4 +789,48 @@ FRotator ABaseCharacter::GetAimOffset()
 	FRotator Result = AimDirectionLocal.ToOrientationRotator();
 
 	return Result;
+}
+
+void ABaseCharacter::TraceLineOfSight()
+{
+	if (!IsPlayerControlled())
+	{
+		return;
+	}
+
+	FVector ViewLocation;
+	FRotator ViewRotation;
+
+	APlayerController* PlayerController = GetController<APlayerController>();
+	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	FVector ViewDirection = ViewRotation.Vector();
+	FVector TraceEnd = ViewLocation + ViewDirection * LineOfSightDistance;
+
+	FHitResult HitResult;
+
+	GetWorld()->LineTraceSingleByChannel(HitResult, ViewLocation, TraceEnd, ECC_Visibility);
+
+	if (LineOfSightObject.GetObject() != HitResult.Actor)
+	{
+		FName ActionName;
+		LineOfSightObject = HitResult.Actor.Get();
+		if (LineOfSightObject.GetInterface())
+		{
+			ActionName = LineOfSightObject->GetActionEventName();
+		}
+		else
+		{
+			ActionName = NAME_None;
+		}
+		OnInteractableObjectFound.ExecuteIfBound(ActionName);
+	}
+}
+
+void ABaseCharacter::Interact()
+{
+	if (LineOfSightObject.GetInterface())
+	{
+		LineOfSightObject->Interact(this);
+	}
 }

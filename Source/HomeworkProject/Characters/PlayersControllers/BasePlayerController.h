@@ -76,6 +76,8 @@ private:
 	TSoftObjectPtr<class ABaseCharacter> CachedBaseCharacter;
 
 	void ToggleMainMenu();
+
+	void Interact();
 private:
 	bool bIgnoreCameraPitch = false;
 
@@ -83,4 +85,5 @@ private:
 	UUserWidget* MainMenuWidget = nullptr;
 
 	void CreateAndInitializeWidgets();
+	void OnInteractableObjectFound(FName ActionName);
 };

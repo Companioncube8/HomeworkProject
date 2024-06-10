@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class IInteractable;
 class UBaseCharacterMovementComponent;
 
 USTRUCT(BlueprintType)
@@ -44,6 +45,7 @@ struct FMantlingSettings
 
 };
 
+DECLARE_DELEGATE_OneParam(FOnInteractableObjectFound, FName);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAimingStateChanged, bool)
 
 class AInteractiveActor;
@@ -57,6 +59,8 @@ class HOMEWORKPROJECT_API ABaseCharacter : public ACharacter, public IGenericTea
 
 public:
 	ABaseCharacter(const FObjectInitializer& ObjectInitializer);
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -189,6 +193,10 @@ public:
 
 	FRotator GetAimOffset();
 
+	void Interact();
+
+	FOnInteractableObjectFound OnInteractableObjectFound;
+
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();
@@ -290,6 +298,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Team")
 	ETeams Team = ETeams::Enemy;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Components")
+	float LineOfSightDistance = 500.f;
+
+	void TraceLineOfSight();
+
+	UPROPERTY()
+	TScriptInterface<IInteractable> LineOfSightObject;
+
 private:
 
 	FVector GetIKOutHitLocationForASocket(const FName& SocketName);

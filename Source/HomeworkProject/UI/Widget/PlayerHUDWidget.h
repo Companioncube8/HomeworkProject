@@ -9,7 +9,7 @@
 
 class UReticleWidget;
 class UWidgetCharacterAttributes;
-
+class UHighlightInteractable;
 UCLASS()
 class HOMEWORKPROJECT_API UPlayerHUDWidget : public UUserWidget
 {
@@ -22,6 +22,10 @@ public:
 	UWidgetCharacterAttributes* GetHealthWidget();
 	UWidgetCharacterAttributes* GetStaminaWidget();
 	UWidgetCharacterAttributes* GetOxigenWidget();
+
+	void SetHighlightInteractableVisibility(bool bIsVisible);
+
+	void SetHighlightInteractableActionText(FName KeyName);
 
 protected:
 
@@ -40,4 +44,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget names")
 	FName OxigenWidgetName;
 
+	UPROPERTY(meta = (BindWidget))
+	UHighlightInteractable* InteractableKey;
 };

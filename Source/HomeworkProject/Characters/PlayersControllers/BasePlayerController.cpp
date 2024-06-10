@@ -5,20 +5,18 @@
 
 #include "../BaseCharacter.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/CharacterComponents/CharacterAttributeComponent.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
-#include "UI/Widget/AmmoWidget.h"
+#include "GameFramework/PlayerInput.h"
 #include "UI/Widget/PlayerHUDWidget.h"
-#include "UI/Widget/ReticleWidget.h"
-#include "UI/Widget/WidgetCharacterAttributes.h"
 
 void ABasePlayerController::SetPawn(APawn* InPawn)
 {
 	Super::SetPawn(InPawn);
 	CachedBaseCharacter = Cast<ABaseCharacter>(InPawn);
-	if (IsLocalController() && InPawn)
+	if (CachedBaseCharacter.IsValid() && IsLocalController())
 	{
 		CreateAndInitializeWidgets();
+		CachedBaseCharacter->OnInteractableObjectFound.BindUObject(this, &ABasePlayerController::OnInteractableObjectFound);
 	}
 }
 
@@ -56,6 +54,7 @@ void ABasePlayerController::SetupInputComponent()
 	InputComponent->BindAction("AlternativeFire", EInputEvent::IE_Pressed, this, &ABasePlayerController::AlternativeFire);
 	InputComponent->BindAction("PrimaryMeleeAttack", EInputEvent::IE_Pressed, this, &ABasePlayerController::PrimaryMeleeAttack);
 	InputComponent->BindAction("SecondaryMeleeAttack", EInputEvent::IE_Pressed, this, &ABasePlayerController::SecondaryMeleeAttack);
+	InputComponent->BindAction(ActionInteract, EInputEvent::IE_Pressed, this, &ABasePlayerController::Interact);
 	FInputActionBinding& ToggleMainBinding = InputComponent->BindAction("ToggleMainMenu", EInputEvent::IE_Pressed, this, &ABasePlayerController::ToggleMainMenu);
 	ToggleMainBinding.bExecuteWhenPaused = true;
 }
@@ -315,6 +314,16 @@ void ABasePlayerController::SecondaryMeleeAttack()
 	}
 }
 
+void ABasePlayerController::Interact()
+{
+
+	if (CachedBaseCharacter.IsValid())
+	{
+		CachedBaseCharacter->Interact();
+	}
+}
+
+
 void ABasePlayerController::ToggleMainMenu()
 {
 	if (!MainMenuWidget || !PlayerHUDWidget)
@@ -358,4 +367,21 @@ void ABasePlayerController::CreateAndInitializeWidgets()
 
 	SetInputMode(FInputModeGameOnly{});
 	bShowMouseCursor = false;
+}
+
+void ABasePlayerController::OnInteractableObjectFound(FName ActionName)
+{
+	if (!IsValid(PlayerHUDWidget))
+	{
+		return;
+	}
+
+	TArray<FInputActionKeyMapping> ActionKeys = PlayerInput->GetKeysForAction(ActionName);
+	const bool HasAnyKeys = ActionKeys.Num() != 0;
+	if (HasAnyKeys)
+	{
+		FName ActionKey = ActionKeys[0].Key.GetFName();
+		PlayerHUDWidget->SetHighlightInteractableActionText(ActionKey);
+	}
+	PlayerHUDWidget->SetHighlightInteractableVisibility(HasAnyKeys);
 }

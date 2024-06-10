@@ -3,6 +3,7 @@
 
 #include "PlayerHUDWidget.h"
 
+#include "HighlightInteractable.h"
 #include "ReticleWidget.h"
 #include "WidgetCharacterAttributes.h"
 #include "Blueprint/WidgetTree.h"
@@ -34,3 +35,26 @@ UWidgetCharacterAttributes* UPlayerHUDWidget::GetStaminaWidget()
 	return WidgetTree->FindWidget<UWidgetCharacterAttributes>(StaminaWidgetName);
 }
 
+void UPlayerHUDWidget::SetHighlightInteractableActionText(FName KeyName)
+{
+	if (InteractableKey)
+	{
+		InteractableKey->SetActionText(KeyName);
+	}
+}
+
+void UPlayerHUDWidget::SetHighlightInteractableVisibility(bool bIsVisible)
+{
+	if (!InteractableKey)
+	{
+		return;
+	}
+	if (bIsVisible)
+	{
+		InteractableKey->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		InteractableKey->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
