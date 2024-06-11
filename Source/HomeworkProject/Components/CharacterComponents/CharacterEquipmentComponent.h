@@ -51,6 +51,8 @@ public:
 
 	void ChangeCurrentWeaponFireMode();
 
+	void AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass);
+
 protected:
 	virtual void BeginPlay() override;
 

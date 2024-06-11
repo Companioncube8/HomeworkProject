@@ -55,6 +55,9 @@ protected:
 
 	ABaseCharacter* GetCharacterOwner() const;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	FName DataTableId = NAME_None;
+
 private:
 	TWeakObjectPtr<ABaseCharacter> CachedCharacterOwner;
 

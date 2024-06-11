@@ -864,3 +864,8 @@ void ABaseCharacter::Interact()
 		LineOfSightObject->Interact(this);
 	}
 }
+
+void ABaseCharacter::AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass)
+{
+	CharacterEquipmentComponent->AddEquipmentItem(EquipableItemClass);
+}

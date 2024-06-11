@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class AEquipableItem;
 class UWidgetComponent;
 class IInteractable;
 class UBaseCharacterMovementComponent;
@@ -204,6 +205,8 @@ public:
 	void InitializeHealthProgress();
 
 	virtual void BeginPlay() override;
+
+	void AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass);
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();

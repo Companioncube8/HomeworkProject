@@ -349,3 +349,18 @@ void UCharacterEquipmentComponent::OnRep_ItemsArray()
 		}
 	}
 }
+
+void UCharacterEquipmentComponent::AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass)
+{
+	ARangeWeaponItem* RangeWeaponObject = Cast<ARangeWeaponItem>(EquipableItemClass->GetDefaultObject());
+	if (!RangeWeaponObject)
+	{
+		return;
+	}
+
+	AmmunitionArray[(uint32)RangeWeaponObject->GetAmmoType()] += RangeWeaponObject->GetMaxAmmo();
+	if (CurrentEquippedWeapon)
+	{
+		OnCurrentWeaponAmmoChanged(CurrentEquippedWeapon->GetAmmo());
+	}
+}
