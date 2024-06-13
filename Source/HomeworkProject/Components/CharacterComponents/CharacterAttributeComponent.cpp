@@ -159,3 +159,16 @@ void UCharacterAttributeComponent::OnHealthChanged()
 		}
 	}
 }
+
+void UCharacterAttributeComponent::AddHealth(float HealthToAdd)
+{
+	Health = FMath::Clamp(Health + HealthToAdd, 0.f, MaxHealth);
+	OnHealthChanged();
+}
+
+void UCharacterAttributeComponent::RestoreFullStamina()
+{
+	CurrentStamina = MaxStamina;
+	OnStaminaPercentChanged.ExecuteIfBound(CurrentStamina / MaxStamina);
+	OnOutOfStamina.Broadcast(false);
+}

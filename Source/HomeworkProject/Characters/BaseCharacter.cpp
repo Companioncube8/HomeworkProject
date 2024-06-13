@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
+#include "Components/CharacterComponents/CharacterInventoryComponent.h"
 #include "Curves/CurveVector.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PhysicsVolume.h"
@@ -21,6 +22,7 @@
 #include "HomeworkProject/Components/CharacterComponents/CharacterAttributeComponent.h"
 #include "HomeworkProject/HomeworkProjectTypes.h"
 #include "Net/UnrealNetwork.h"
+#include "PlayersControllers/BasePlayerController.h"
 #include "UI/Widget/World/AttributeProgressBar.h"
 
 
@@ -34,12 +36,11 @@ ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
 	
 	LedgeDetectorComponent = CreateDefaultSubobject<ULedgeDetectorComponent>(TEXT("LedgeDetector"));
 
-	CharacterEquipmentComponent = CreateDefaultSubobject<UCharacterEquipmentComponent>(TEXT("CharacterEquipment"));
-
-
 	GetMesh()->CastShadow = true;
 	GetMesh()->bCastDynamicShadow = true;
 
+	CharacterEquipmentComponent = CreateDefaultSubobject<UCharacterEquipmentComponent>(TEXT("CharacterEquipment"));
+	CharacterInventoryComponent = CreateDefaultSubobject<UCharacterInventoryComponent>(TEXT("CharacterInventory"));
 	CharacterAttributesComponent = CreateDefaultSubobject<UCharacterAttributeComponent>(TEXT("CharaterAttributes"));
 
 	CharacterAttributesComponent->OnDeathEvent.AddUObject(this, &ABaseCharacter::OnDeath);
@@ -868,4 +869,34 @@ void ABaseCharacter::Interact()
 void ABaseCharacter::AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass)
 {
 	CharacterEquipmentComponent->AddEquipmentItem(EquipableItemClass);
+}
+
+bool ABaseCharacter::PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup)
+{
+	bool Result = false;
+	if (CharacterInventoryComponent->HasFreeSlot())
+	{
+		Result = CharacterInventoryComponent->AddItem(ItemToPickup, 1);
+	}
+	return Result;
+}
+
+void ABaseCharacter::UseInventory(ABasePlayerController* PlayerController)
+{
+	if (!PlayerController)
+	{
+		return;
+	}
+
+	if(!CharacterInventoryComponent->IsViewVisible())
+	{
+		CharacterInventoryComponent->OpenViewInventory(PlayerController);
+		PlayerController->SetInputMode(FInputModeGameAndUI{});
+		PlayerController->bShowMouseCursor = true;
+	} else
+	{
+		CharacterInventoryComponent->CloseViewInventory();
+		PlayerController->SetInputMode(FInputModeGameOnly{});
+		PlayerController->bShowMouseCursor = false;
+	}
 }

@@ -54,6 +54,7 @@ void ABasePlayerController::SetupInputComponent()
 	InputComponent->BindAction("AlternativeFire", EInputEvent::IE_Pressed, this, &ABasePlayerController::AlternativeFire);
 	InputComponent->BindAction("PrimaryMeleeAttack", EInputEvent::IE_Pressed, this, &ABasePlayerController::PrimaryMeleeAttack);
 	InputComponent->BindAction("SecondaryMeleeAttack", EInputEvent::IE_Pressed, this, &ABasePlayerController::SecondaryMeleeAttack);
+	InputComponent->BindAction("UseInventory", EInputEvent::IE_Pressed, this, &ABasePlayerController::UseInventory);
 	InputComponent->BindAction(ActionInteract, EInputEvent::IE_Pressed, this, &ABasePlayerController::Interact);
 	FInputActionBinding& ToggleMainBinding = InputComponent->BindAction("ToggleMainMenu", EInputEvent::IE_Pressed, this, &ABasePlayerController::ToggleMainMenu);
 	ToggleMainBinding.bExecuteWhenPaused = true;
@@ -320,6 +321,16 @@ void ABasePlayerController::Interact()
 	if (CachedBaseCharacter.IsValid())
 	{
 		CachedBaseCharacter->Interact();
+	}
+}
+
+
+void ABasePlayerController::UseInventory()
+{
+
+	if (CachedBaseCharacter.IsValid())
+	{
+		CachedBaseCharacter->UseInventory(this);
 	}
 }
 

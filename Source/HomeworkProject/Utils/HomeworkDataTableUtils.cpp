@@ -5,7 +5,7 @@
 #include "HomeworkProjectTypes.h"
 #include "Inventory/Items/InventoryItem.h"
 
-FWeaponTableRow* HomeworkDataTableUtils::FindWeaponData(FName WeaponID)
+FWeaponTableRow* HomeworkDataTableUtils::FindWeaponData(const FName WeaponID)
 {
 	static const FString ContextString(TEXT("Find Weapon Data"));
 
@@ -17,4 +17,18 @@ FWeaponTableRow* HomeworkDataTableUtils::FindWeaponData(FName WeaponID)
 	}
 
 	return WeaponDataTable->FindRow<FWeaponTableRow>(WeaponID, ContextString);
+}
+
+FItemTableRow* HomeworkDataTableUtils::FindInventoryItemData(const FName ItemID)
+{
+	static const FString ContextString(TEXT("Find Item Data"));
+
+	UDataTable* InventoryItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/HomeworkProject/Core/Data/DataTables/DT_InventoryItemList.DT_InventoryItemList"));
+
+	if (InventoryItemDataTable == nullptr)
+	{
+		return nullptr;
+	}
+
+	return InventoryItemDataTable->FindRow<FItemTableRow>(ItemID, ContextString);
 }

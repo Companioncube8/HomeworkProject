@@ -7,6 +7,8 @@
 #include "UObject/NoExportTypes.h"
 #include "InventoryItem.generated.h"
 
+class ABaseCharacter;
+class UInventoryItem;
 class APickableItem;
 class AEquipableItem;
 
@@ -37,9 +39,48 @@ public:
 	FInventoryItemDescription WeaponItemDescription;
 };
 
-UCLASS()
+USTRUCT(BlueprintType)
+struct FItemTableRow: public FTableRowBase
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
+	TSubclassOf<APickableItem> PickableActorClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
+	TSubclassOf<UInventoryItem> InventoryItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
+	FInventoryItemDescription InventoryItemDescription;
+};
+
+UCLASS(Blueprintable)
 class HOMEWORKPROJECT_API UInventoryItem : public UObject
 {
 	GENERATED_BODY()
-	
+
+public:
+	void Initialize(FName DataTableID_In, const FInventoryItemDescription& Description_In);
+
+	FName GetDataTableID() const;
+	const FInventoryItemDescription& GetDescription() const;
+
+	virtual bool IsEquipable() const;
+	virtual bool IsConsumable() const;
+
+	virtual  bool Consume(ABaseCharacter* ConsumeTarget) PURE_VIRTUAL(UInventoryItem::Consume, return false; );
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
+	FName DataTableID = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
+	FInventoryItemDescription Description;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
+	bool bIsEquipable = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
+	bool bIsConsumable = false;
+private:
+	bool bIsInitialize = false;
 };

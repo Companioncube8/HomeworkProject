@@ -41,6 +41,10 @@ public:
 
 	float GetHealthPercent() const;
 
+	void AddHealth(float HealthToAdd);
+
+	void RestoreFullStamina();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

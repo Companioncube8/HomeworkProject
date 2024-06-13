@@ -8,6 +8,9 @@
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
+class ABasePlayerController;
+class UCharacterInventoryComponent;
+class UInventoryItem;
 class AEquipableItem;
 class UWidgetComponent;
 class IInteractable;
@@ -185,6 +188,7 @@ public:
 
 	UCharacterAttributeComponent* GetCharacterAttributeComponent_Mutable() const;
 
+
 	void Reload();
 
 	/** IGenericTeamAgentInterface**/
@@ -207,6 +211,10 @@ public:
 	virtual void BeginPlay() override;
 
 	void AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass);
+	bool PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup);
+
+	void UseInventory(ABasePlayerController* PlayerController);
+
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();
@@ -276,6 +284,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Components")
 	UCharacterAttributeComponent* CharacterAttributesComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character | Components")
+	UCharacterInventoryComponent* CharacterInventoryComponent;
 
 	virtual void OnDeath();
 

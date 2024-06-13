@@ -78,6 +78,9 @@ private:
 	void ToggleMainMenu();
 
 	void Interact();
+
+	void UseInventory();
+
 private:
 	bool bIgnoreCameraPitch = false;
 
