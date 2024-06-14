@@ -151,6 +151,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Fire mode")
 	TArray<FFireModeInfo> FireModes;
+
 private:
 
 	UPROPERTY(Replicated)

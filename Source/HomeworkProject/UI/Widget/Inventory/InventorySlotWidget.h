@@ -19,7 +19,7 @@ class HOMEWORKPROJECT_API UInventorySlotWidget : public UUserWidget
 public:
 	void InitializeItemSlot(FInventorySlot& InventorySlot);
 	void UpdateView();
-	//void SetItemIcon(UTexture2D* Icon);
+	void SetItemIcon(UTexture2D* Icon);
 
 protected:
 	UPROPERTY(meta = (BindWidget))

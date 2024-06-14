@@ -8,6 +8,7 @@
 #include "Components/ActorComponent.h"
 #include "CharacterEquipmentComponent.generated.h"
 
+class UEquipmentViewWidget;
 class AMeleeWeaponItem;
 typedef TArray<class AEquipableItem*, TInlineAllocator<(uint32)EEquipmentSlots::MAX>> TItemsArray;
 typedef TArray<int32, TInlineAllocator<(uint32)EAmunitionType::MAX>> TAmmunitionArray;
@@ -51,8 +52,14 @@ public:
 
 	void ChangeCurrentWeaponFireMode();
 
-	void AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass);
+	bool AddEquipmentItemToSlot(const TSubclassOf<AEquipableItem> EquipableItemClass, int32 SlotIndex);
+	void RemoveItemFromSlot(int32 SlotIndex);
 
+	void OpenViewEquipment(APlayerController* PlayerController);
+	void CloseViewEquipment();
+	bool IsViewVisible() const;
+
+	const TArray<AEquipableItem*>& GetItems() const;
 protected:
 	virtual void BeginPlay() override;
 
@@ -68,7 +75,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lodout")
 	EEquipmentSlots AutoEqupItemInSlot = EEquipmentSlots::None;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "View")
+	TSubclassOf<UEquipmentViewWidget> ViewWidgetClass;
 
+	void CreateViewWidget(APlayerController* PlayerController);
 private:
 	UFUNCTION(Server, Reliable)
 	void Server_EquipItemInSlot(EEquipmentSlots Slot);
@@ -118,6 +128,8 @@ private:
 
 	bool bIsEquipping = false;
 	FTimerHandle EquipTimer;
+
+	UEquipmentViewWidget* ViewWidget;
 
 	void AutoEquip();
 

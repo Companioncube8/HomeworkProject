@@ -34,6 +34,10 @@ public:
 
 	virtual EReticleType GetReticleType() const;
 
+	FName GetDataTableID() const;
+
+	bool IsSlotCompatable(EEquipmentSlots Slot);
+
 protected:
 	UPROPERTY(BlueprintAssignable)
 	FOnEquipmentStateChanged OnEquipmentStateChanged;
@@ -57,6 +61,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
 	FName DataTableId = NAME_None;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	TArray<EEquipmentSlots> CompatablEquipmentSlotes;
 
 private:
 	TWeakObjectPtr<ABaseCharacter> CachedCharacterOwner;

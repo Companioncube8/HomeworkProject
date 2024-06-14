@@ -210,7 +210,6 @@ public:
 
 	virtual void BeginPlay() override;
 
-	void AddEquipmentItem(const TSubclassOf<AEquipableItem> EquipableItemClass);
 	bool PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup);
 
 	void UseInventory(ABasePlayerController* PlayerController);

@@ -71,3 +71,14 @@ ABaseCharacter* AEquipableItem::GetCharacterOwner() const
 {
 	return CachedCharacterOwner.IsValid() ? CachedCharacterOwner.Get() : nullptr;
 }
+
+FName AEquipableItem::GetDataTableID() const
+{
+	return DataTableId;
+}
+
+
+bool AEquipableItem::IsSlotCompatable(EEquipmentSlots Slot)
+{
+	return CompatablEquipmentSlotes.Contains(Slot);
+}

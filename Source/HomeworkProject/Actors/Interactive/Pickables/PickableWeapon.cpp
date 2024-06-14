@@ -5,6 +5,7 @@
 #include "HomeworkProjectTypes.h"
 #include "Characters/BaseCharacter.h"
 #include "Inventory/Items/InventoryItem.h"
+#include "Inventory/Items/Equipables/WeaponInventoryItem.h"
 #include "Utils/HomeworkDataTableUtils.h"
 
 APickableWeapon::APickableWeapon()
@@ -22,7 +23,10 @@ void APickableWeapon::Interact(ABaseCharacter* Character)
 {
 	if (FWeaponTableRow* WeaponRow = HomeworkDataTableUtils::FindWeaponData(DataTableId))
 	{
-		Character->AddEquipmentItem(WeaponRow->EquipableActor);
+		TWeakObjectPtr<UWeaponInventoryItem> Weapon = NewObject<UWeaponInventoryItem>(Character);
+		Weapon->Initialize(DataTableId, WeaponRow->WeaponItemDescription);
+		Weapon->SetEquipWeaponClass(WeaponRow->EquipableActor);
+		Character->PickupItem(Weapon);
 		Destroy();
 	}
 }

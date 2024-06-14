@@ -104,3 +104,8 @@ void UInventorySlotWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDro
 	LinkedSlot->Item = TWeakObjectPtr<UInventoryItem>(Cast<UInventoryItem>(InOperation->Payload));
 	LinkedSlot->UpdateSlotState();
 }
+
+void UInventorySlotWidget::SetItemIcon(UTexture2D* Icon)
+{
+	ImageItemIcon->SetBrushFromTexture(Icon);
+}
