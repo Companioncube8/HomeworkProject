@@ -2,13 +2,17 @@
 
 
 #include "CharacterEquipmentComponent.h"
+
+#include "CharacterInventoryComponent.h"
 #include "HomeworkProjectTypes.h"
 #include "Actors/Equipment/Throwables/ThrowableItem.h"
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Actors/Equipment/Weapons/RangeWeaponItem.h"
 #include "Characters/BaseCharacter.h"
+#include "Inventory/Items/Ammo/AmmoInventoryItem.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/Widget/Equipment/EquipmentViewWidget.h"
+#include "Utils/HomeworkDataTableUtils.h"
 
 
 UCharacterEquipmentComponent::UCharacterEquipmentComponent()
@@ -56,6 +60,24 @@ void UCharacterEquipmentComponent::CreateLoadout()
 	}
 
 	OnThrowableItemsCountChangedEvent.ExecuteIfBound(AmmunitionArray[(uint32)EAmunitionType::FragGrenades]);
+	InitializeAmunition();
+}
+
+void UCharacterEquipmentComponent::InitializeAmunition()
+{
+	TArray<FName> NamesArray;
+	HomeworkDataTableUtils::GetAllAmmoNames(NamesArray);
+	for (FName ItemID : NamesArray)
+	{
+		if (FAmmoTableRow* AmmoData = HomeworkDataTableUtils::FindAmmoData(ItemID))
+		{
+			TWeakObjectPtr<UAmmoInventoryItem> Ammo = NewObject<UAmmoInventoryItem>(CachedBaseCharacter.Get());
+			Ammo->Initialize(ItemID, AmmoData->ItemDescription);
+			Ammo->SetAmmunitionType(AmmoData->AmunitionType);
+			Ammo->SetCount(AmmunitionArray[(int32)AmmoData->AmunitionType]);
+			CachedBaseCharacter->PickupItem(Ammo);
+		}
+	}
 }
 
 EEquipableItemType UCharacterEquipmentComponent::GetCurrentEquippedItemType() const
@@ -128,6 +150,8 @@ void UCharacterEquipmentComponent::ReloadAmmoInCurrentWeapon(int32 NumberOfAmmo,
 			CurrentEquippedWeapon->EndReload(true);
 		}
 	}
+
+	CachedBaseCharacter->UpdateAmunitionCountInInventory(ReloadedAmmo, CurrentEquippedWeapon->GetAmmoType());
 }
 
 void UCharacterEquipmentComponent::UnEquipCurrentItem()
@@ -291,6 +315,7 @@ void UCharacterEquipmentComponent::LaunchCurrentThrowableItem()
 		AmmunitionArray[(uint32)EAmunitionType::FragGrenades] -= 1;
 		OnThrowableItemsCountChangedEvent.ExecuteIfBound(AmmunitionArray[(uint32)EAmunitionType::FragGrenades]);
 
+		CachedBaseCharacter->UpdateAmunitionCountInInventory(AmmunitionArray[(uint32)CurrentEquippedWeapon->GetAmmoType()], CurrentEquippedWeapon->GetAmmoType());
 
 		bIsEquipping = false;
 		if (CachedBaseCharacter->IsLocallyControlled()) {
@@ -438,3 +463,13 @@ void UCharacterEquipmentComponent::CreateViewWidget(APlayerController* PlayerCon
 	ViewWidget->InitializeEquipmentWidget(this);
 }
 
+int32 UCharacterEquipmentComponent::AddAmmo(int32 NumberOfAmmo, EAmunitionType AmmoType)
+{
+	AmmunitionArray[(uint32)AmmoType] += NumberOfAmmo;
+	if (CurrentEquippedWeapon) {
+		if (AmmoType == CurrentEquippedWeapon->GetAmmoType()) {
+			OnCurrentWeaponAmmoChanged(CurrentEquippedWeapon->GetAmmo());
+		}
+	}
+	return AmmunitionArray[(uint32)AmmoType];
+}

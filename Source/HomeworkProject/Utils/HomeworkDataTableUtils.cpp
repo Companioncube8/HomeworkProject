@@ -32,3 +32,57 @@ FItemTableRow* HomeworkDataTableUtils::FindInventoryItemData(const FName ItemID)
 
 	return InventoryItemDataTable->FindRow<FItemTableRow>(ItemID, ContextString);
 }
+
+FAmmoTableRow* HomeworkDataTableUtils::FindAmmoData(const FName ItemID)
+{
+	static const FString ContextString(TEXT("Find Ammo Data"));
+
+	UDataTable* AmmoDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/HomeworkProject/Core/Data/DataTables/DT_AmmoList.DT_AmmoList"));
+
+	if (AmmoDataTable == nullptr)
+	{
+		return nullptr;
+	}
+	return AmmoDataTable->FindRow<FAmmoTableRow>(ItemID, ContextString);
+}
+
+
+void HomeworkDataTableUtils::GetAllAmmoNames(TArray<FName>& OutArray)
+{
+	static const FString ContextString(TEXT("Find Ammo Data"));
+
+	UDataTable* AmmoDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/HomeworkProject/Core/Data/DataTables/DT_AmmoList.DT_AmmoList"));
+
+	if (AmmoDataTable == nullptr)
+	{
+		return;
+	}
+	OutArray = AmmoDataTable->GetRowNames();
+}
+
+FInventoryItemRow* HomeworkDataTableUtils::FindItemData(const FName ItemID)
+{
+	static const FString ContextString(TEXT("Find Data"));
+
+	UDataTable* WeaponDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/HomeworkProject/Core/Data/DataTables/DT_WeaponList.DT_WeaponList"));
+
+	if (FInventoryItemRow* Row = WeaponDataTable->FindRow<FWeaponTableRow>(ItemID, ContextString))
+	{
+		return Row;
+	}
+
+	UDataTable* InventoryItemDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/HomeworkProject/Core/Data/DataTables/DT_InventoryItemList.DT_InventoryItemList"));
+
+	if (FInventoryItemRow* Row = InventoryItemDataTable->FindRow<FItemTableRow>(ItemID, ContextString))
+	{
+		return Row;
+	}
+
+	UDataTable* AmmoDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/HomeworkProject/Core/Data/DataTables/DT_AmmoList.DT_AmmoList"));
+	if (FInventoryItemRow* Row = AmmoDataTable->FindRow<FAmmoTableRow>(ItemID, ContextString))
+	{
+		return Row;
+	}
+
+	return nullptr;
+}

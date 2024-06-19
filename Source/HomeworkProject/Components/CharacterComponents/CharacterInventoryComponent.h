@@ -21,9 +21,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TWeakObjectPtr<UInventoryItem> Item;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Count = 0;
-
 	void BindOnInventorySlotUpdate(const FInventorySlotUpdate& Callback) const;
 	void UnbindOnInventorySlotUpdate();
 	void UpdateSlotState();
@@ -39,6 +36,7 @@ class HOMEWORKPROJECT_API UCharacterInventoryComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
+	UCharacterInventoryComponent();
 
 	void OpenViewInventory(APlayerController* PlayerController);
 	void CloseViewInventory();
@@ -48,9 +46,14 @@ public:
 
 	bool HasFreeSlot() const;
 
-	bool AddItem(TWeakObjectPtr<UInventoryItem> ItemToAdd, int32 Count);
+	bool AddItem(TWeakObjectPtr<UInventoryItem> ItemToAdd);
 
 	bool RemoveItem(FName ItemID);
+
+	int32 IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount);
+	void DecreaseCountInExistSlot(FName ItemID, int32 DecreaseCount);
+
+	void UpdateCount(int32 Count, FName ItemID);
 
 	TArray<FInventorySlot> GetAllItemsCopy() const;
 	TArray<FText> GetAllItemsNames() const;
@@ -64,8 +67,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory settings", meta = (ClampMin = 1, UIMin = 1))
 	int32 Capacity = 16;
-
-	virtual void BeginPlay() override;
 
 	void CreateViewWidget(APlayerController* PlayerController);
 

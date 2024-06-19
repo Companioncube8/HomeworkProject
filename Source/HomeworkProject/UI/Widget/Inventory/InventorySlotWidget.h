@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
 #include "InventorySlotWidget.generated.h"
 
 class UImage;
@@ -24,6 +25,9 @@ public:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UImage* ImageItemIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* CountText;
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;

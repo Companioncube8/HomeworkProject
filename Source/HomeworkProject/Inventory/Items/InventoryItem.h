@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HomeworkProjectTypes.h"
 #include "Engine/DataTable.h"
 #include "UObject/NoExportTypes.h"
 #include "InventoryItem.generated.h"
@@ -25,33 +26,48 @@ public:
 };
 
 USTRUCT()
-struct FWeaponTableRow: public FTableRowBase
+struct FInventoryItemRow: public  FTableRowBase
 {
 	GENERATED_BODY()
-public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon view")
 	TSubclassOf<APickableItem> PickableActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon view")
-	TSubclassOf<AEquipableItem> EquipableActor;
+	FInventoryItemDescription ItemDescription;
+};
+
+USTRUCT()
+struct FWeaponTableRow: public FInventoryItemRow
+{
+	GENERATED_BODY()
+public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon view")
-	FInventoryItemDescription WeaponItemDescription;
+	TSubclassOf<AEquipableItem> EquipableActor;
+
 };
 
 USTRUCT(BlueprintType)
-struct FItemTableRow: public FTableRowBase
+struct FItemTableRow: public FInventoryItemRow
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
-	TSubclassOf<APickableItem> PickableActorClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
 	TSubclassOf<UInventoryItem> InventoryItemClass;
+};
+
+USTRUCT(BlueprintType)
+struct FAmmoTableRow : public FInventoryItemRow
+{
+	GENERATED_BODY()
+public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
-	FInventoryItemDescription InventoryItemDescription;
+	EAmunitionType AmunitionType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item view")
+	int32 MaxAmmoInSlot;
 };
 
 UCLASS(Blueprintable)
@@ -68,7 +84,11 @@ public:
 	virtual bool IsEquipable() const;
 	virtual bool IsConsumable() const;
 
+	virtual void SetCount(int32 NewCount) { Count = NewCount; };
+	virtual int32 GetCount() { return Count; }
+
 	virtual  bool Consume(ABaseCharacter* ConsumeTarget) PURE_VIRTUAL(UInventoryItem::Consume, return false; );
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
 	FName DataTableID = NAME_None;
@@ -78,6 +98,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
 	bool bIsEquipable = false;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
+	int32 Count;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory item")
 	bool bIsConsumable = false;

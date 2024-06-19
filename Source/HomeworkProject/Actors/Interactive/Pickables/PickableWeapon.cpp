@@ -24,8 +24,9 @@ void APickableWeapon::Interact(ABaseCharacter* Character)
 	if (FWeaponTableRow* WeaponRow = HomeworkDataTableUtils::FindWeaponData(DataTableId))
 	{
 		TWeakObjectPtr<UWeaponInventoryItem> Weapon = NewObject<UWeaponInventoryItem>(Character);
-		Weapon->Initialize(DataTableId, WeaponRow->WeaponItemDescription);
+		Weapon->Initialize(DataTableId, WeaponRow->ItemDescription);
 		Weapon->SetEquipWeaponClass(WeaponRow->EquipableActor);
+		Weapon->SetCount(1);
 		Character->PickupItem(Weapon);
 		Destroy();
 	}

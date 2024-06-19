@@ -29,7 +29,8 @@ void APickablePowerups::Interact(ABaseCharacter* Character)
 	}
 
 	TWeakObjectPtr<UInventoryItem> Item = TWeakObjectPtr<UInventoryItem>(NewObject<UInventoryItem>(Character, ItemData->InventoryItemClass));
-	Item->Initialize(DataTableId, ItemData->InventoryItemDescription);
+	Item->Initialize(DataTableId, ItemData->ItemDescription);
+	Item->SetCount(1);
 
 	const bool bPickedUp = Character->PickupItem(Item);
 	if (bPickedUp)

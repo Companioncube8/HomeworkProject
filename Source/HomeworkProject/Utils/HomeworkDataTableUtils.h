@@ -9,4 +9,7 @@ namespace HomeworkDataTableUtils
 {
 	FWeaponTableRow* FindWeaponData(const FName WeaponID);
 	FItemTableRow* FindInventoryItemData(const FName ItemID);
+	FAmmoTableRow* FindAmmoData(const FName ItemID);
+	void GetAllAmmoNames(TArray<FName>& OutArray);
+	FInventoryItemRow* FindItemData(const FName ItemID);
 };

@@ -21,9 +21,12 @@
 #include "HomeworkProject/Actors/Interactive/Enviroment/Zipline.h"
 #include "HomeworkProject/Components/CharacterComponents/CharacterAttributeComponent.h"
 #include "HomeworkProject/HomeworkProjectTypes.h"
+#include "Inventory/Items/InventoryItem.h"
+#include "Inventory/Items/Ammo/AmmoInventoryItem.h"
 #include "Net/UnrealNetwork.h"
 #include "PlayersControllers/BasePlayerController.h"
 #include "UI/Widget/World/AttributeProgressBar.h"
+#include "Utils/HomeworkDataTableUtils.h"
 
 
 ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
@@ -866,12 +869,35 @@ void ABaseCharacter::Interact()
 	}
 }
 
+int32 ABaseCharacter::IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount, EAmunitionType AmunitionType)
+{
+	CharacterEquipmentComponent->AddAmmo(AddedCount, AmunitionType);
+	return CharacterInventoryComponent->IncreaseCountInExistSlot(ItemID, MaxCountForSlot, AddedCount);
+}
+
+void ABaseCharacter::UpdateAmunitionCountInInventory(int32 Count, EAmunitionType AmunitionType)
+{
+	TArray<FName> NamesArray;
+	HomeworkDataTableUtils::GetAllAmmoNames(NamesArray);
+	for (FName ItemID : NamesArray)
+	{
+		if (FAmmoTableRow* AmmoData = HomeworkDataTableUtils::FindAmmoData(ItemID))
+		{
+			if (AmmoData->AmunitionType == AmunitionType)
+			{
+				CharacterInventoryComponent->DecreaseCountInExistSlot(ItemID, Count);
+				return;
+			}
+		}
+	}
+}
+
 bool ABaseCharacter::PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup)
 {
 	bool Result = false;
 	if (CharacterInventoryComponent->HasFreeSlot())
 	{
-		Result = CharacterInventoryComponent->AddItem(ItemToPickup, 1);
+		Result = CharacterInventoryComponent->AddItem(ItemToPickup);
 	}
 	return Result;
 }

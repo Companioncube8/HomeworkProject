@@ -188,6 +188,7 @@ public:
 
 	UCharacterAttributeComponent* GetCharacterAttributeComponent_Mutable() const;
 
+	const UCharacterInventoryComponent* GetCharacterInventoryComponent() const { return  CharacterInventoryComponent; }
 
 	void Reload();
 
@@ -211,9 +212,11 @@ public:
 	virtual void BeginPlay() override;
 
 	bool PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup);
-
 	void UseInventory(ABasePlayerController* PlayerController);
 
+	void UpdateAmunitionCountInInventory(int32 Count, EAmunitionType AmunitionType);
+
+	int32 IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount, EAmunitionType AmunitionType);
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();

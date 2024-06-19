@@ -26,7 +26,7 @@ void UEquipmentSlotWidget::InitializeEquipmentSlot(TWeakObjectPtr<AEquipableItem
 	if (EquipmentData != nullptr)
 	{
 		AdapterLinkedInventoryItem = NewObject<UWeaponInventoryItem>(Equipment->GetOwner());
-		AdapterLinkedInventoryItem->Initialize(Equipment->GetDataTableID(), EquipmentData->WeaponItemDescription);
+		AdapterLinkedInventoryItem->Initialize(Equipment->GetDataTableID(), EquipmentData->ItemDescription);
 		AdapterLinkedInventoryItem->SetEquipWeaponClass(EquipmentData->EquipableActor);
 	}
 }

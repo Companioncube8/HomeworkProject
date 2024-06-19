@@ -48,6 +48,8 @@ public:
 
 	void ReloadAmmoInCurrentWeapon(int32 NumberOfAmmo = 0, bool bCheckIsFull = false);
 
+	int32 AddAmmo(int32 NumberOfAmmo, EAmunitionType AmmoType);
+
 	void LaunchCurrentThrowableItem();
 
 	void ChangeCurrentWeaponFireMode();
@@ -132,5 +134,5 @@ private:
 	UEquipmentViewWidget* ViewWidget;
 
 	void AutoEquip();
-
+	void InitializeAmunition();
 };

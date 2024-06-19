@@ -3,11 +3,16 @@
 
 #include "UI/Widget/Inventory/InventorySlotWidget.h"
 
+#include "Actors/Interactive/Pickables/PickableAmmo.h"
+#include "Actors/Interactive/Pickables/PickableItem.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Characters/BaseCharacter.h"
 #include "Components/Image.h"
+#include "Components/CharacterComponents/CharacterEquipmentComponent.h"
 #include "Components/CharacterComponents/CharacterInventoryComponent.h"
 #include "Inventory/Items/InventoryItem.h"
+#include "Inventory/Items/Ammo/AmmoInventoryItem.h"
+#include "Utils/HomeworkDataTableUtils.h"
 
 
 void UInventorySlotWidget::InitializeItemSlot(FInventorySlot& InventorySlot)
@@ -24,6 +29,7 @@ void UInventorySlotWidget::UpdateView()
 	if (LinkedSlot == nullptr)
 	{
 		ImageItemIcon->SetBrushFromTexture(nullptr);
+		CountText->SetText(FText::FromString(""));
 		return;
 	}
 
@@ -31,10 +37,12 @@ void UInventorySlotWidget::UpdateView()
 	{
 		const FInventoryItemDescription& Description = LinkedSlot->Item->GetDescription();
 		ImageItemIcon->SetBrushFromTexture(Description.Icon);
+		CountText->SetText(FText::FromString(FString::FromInt(LinkedSlot->Item->GetCount())));
 	}
 	else
 	{
 		ImageItemIcon->SetBrushFromTexture(nullptr);
+		CountText->SetText(FText::FromString(""));
 	}
 }
 
@@ -101,7 +109,23 @@ bool UInventorySlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDrag
 
 void UInventorySlotWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	LinkedSlot->Item = TWeakObjectPtr<UInventoryItem>(Cast<UInventoryItem>(InOperation->Payload));
+	TWeakObjectPtr <UInventoryItem> Item = TWeakObjectPtr<UInventoryItem>(Cast<UInventoryItem>(InOperation->Payload));
+	if (FInventoryItemRow* InventoryData = HomeworkDataTableUtils::FindItemData(Item->GetDataTableID()))
+	{
+		ABaseCharacter* ItemOwner = Cast<ABaseCharacter>(Item->GetOuter());
+		int32 ForwardOffset = 100;
+		FVector Location = ItemOwner->GetActorLocation() + (FVector::ForwardVector * ForwardOffset);
+		APickableItem* PickableItem = GetWorld()->SpawnActor<APickableItem>(InventoryData->PickableActor, Location, FRotator::ZeroRotator);
+		if (UAmmoInventoryItem *AmmoItem = Cast<UAmmoInventoryItem>(Item))
+		{
+			if (APickableAmmo* PickableAmmo = Cast<APickableAmmo>(PickableItem))
+			{
+				PickableAmmo->SetCount(Item->GetCount());
+			}
+			ItemOwner->GetCharacterEquipmentComponent_Mutable()->AddAmmo(-Item->GetCount(), AmmoItem->GetAmmunitionType());
+		}
+	}
+	LinkedSlot->ClearSlot();
 	LinkedSlot->UpdateSlotState();
 }
 

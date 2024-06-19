@@ -6,12 +6,11 @@
 #include "Inventory/Items/InventoryItem.h"
 #include "UI/Widget/Inventory/InventoryViewWidget.h"
 
-
-void UCharacterInventoryComponent::BeginPlay()
+UCharacterInventoryComponent::UCharacterInventoryComponent()
 {
-	Super::BeginPlay();
 	InventorySlots.AddDefaulted(Capacity);
 }
+
 
 void UCharacterInventoryComponent::CreateViewWidget(APlayerController* PlayerController)
 {
@@ -71,9 +70,80 @@ bool UCharacterInventoryComponent::HasFreeSlot() const
 	return ItemsInInventory < Capacity;
 }
 
-bool UCharacterInventoryComponent::AddItem(TWeakObjectPtr<UInventoryItem> ItemToAdd, int32 Count)
+void UCharacterInventoryComponent::DecreaseCountInExistSlot(FName ItemID, int32 DecreaseCount)
 {
-	if (!ItemToAdd.IsValid() || Count < 0)
+	int32 RemainingCount = DecreaseCount;
+	while (RemainingCount > 0)
+	{
+		int32 Index = InventorySlots.FindLastByPredicate([=](const FInventorySlot& Slot)
+		{
+			if (!Slot.Item.IsValid())
+			{
+				return false;
+			}
+			return Slot.Item->GetDataTableID() == ItemID;
+		});
+		if (Index == INDEX_NONE)
+		{
+			return;
+		}
+		FInventorySlot& Slot = InventorySlots[Index];
+		if (Slot.Item->GetCount() < DecreaseCount)
+		{
+			RemainingCount -= Slot.Item->GetCount();
+			Slot.ClearSlot();
+		} else
+		{
+			Slot.Item->SetCount(Slot.Item->GetCount() - RemainingCount);
+			RemainingCount = 0;
+		}
+		Slot.UpdateSlotState();
+	}
+}
+
+int32 UCharacterInventoryComponent::IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount)
+{
+	int32 RemainingCount = AddedCount;
+	for (FInventorySlot& Slot : InventorySlots)
+	{
+		if (Slot.Item == nullptr)
+		{
+			continue;
+		}
+		if (Slot.Item->GetDataTableID() == ItemID) {
+
+			int32 Count = Slot.Item->GetCount();
+			if (Count < MaxCountForSlot)
+			{
+				int32 AddedForSlotCount = MaxCountForSlot - Slot.Item->GetCount();
+				if (RemainingCount < AddedForSlotCount)
+				{
+					Slot.Item->SetCount(Slot.Item->GetCount() + RemainingCount);
+					Slot.UpdateSlotState();
+					return 0;
+				}
+				else
+				{
+					Slot.Item->SetCount(Slot.Item->GetCount() + AddedForSlotCount);
+					Slot.UpdateSlotState();
+					RemainingCount -= AddedForSlotCount;
+				}
+			}
+		}
+	}
+	return RemainingCount;
+}
+
+void UCharacterInventoryComponent::UpdateCount(int32 Count, FName ItemID)
+{
+	FInventorySlot* Slot = FindItemSlot(ItemID);
+	Slot->Item->SetCount(Count);
+	Slot->UpdateSlotState();
+}
+
+bool UCharacterInventoryComponent::AddItem(TWeakObjectPtr<UInventoryItem> ItemToAdd)
+{
+	if (!ItemToAdd.IsValid())
 	{
 		return false;
 	}
@@ -85,7 +155,6 @@ bool UCharacterInventoryComponent::AddItem(TWeakObjectPtr<UInventoryItem> ItemTo
 	if(FreeSlot != nullptr)
 	{
 		FreeSlot->Item = ItemToAdd;
-		FreeSlot->Count = Count;
 		ItemsInInventory++;
 		Result = true;
 		FreeSlot->UpdateSlotState();
@@ -152,7 +221,6 @@ void FInventorySlot::UpdateSlotState()
 void FInventorySlot::ClearSlot()
 {
 	Item = nullptr;
-	Count = 0;
 	OnInventorySlotUpdate.ExecuteIfBound();
 }
 
