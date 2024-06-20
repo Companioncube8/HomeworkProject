@@ -12,6 +12,7 @@
 #include "Inventory/Items/Ammo/AmmoInventoryItem.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/Widget/Equipment/EquipmentViewWidget.h"
+#include "UI/Widget/Equipment/WeaponWheelWidget.h"
 #include "Utils/HomeworkDataTableUtils.h"
 
 
@@ -247,6 +248,19 @@ void UCharacterEquipmentComponent::EquipItemInSlot(EEquipmentSlots Slot)
 
 void UCharacterEquipmentComponent::EquipNextItem()
 {
+	if (CachedBaseCharacter->IsPlayerControlled())
+	{
+		if (IsSelectingWeapon())
+		{
+			WeaponWheelWidget->NextSegment();
+		} else
+		{
+			APlayerController* PlayerController = CachedBaseCharacter->GetController<APlayerController>();
+			OpenWeaponWheel(PlayerController);
+		}
+		return;
+	}
+
 	uint32 CurrentSlotIndex = (uint32)CurrentEquippedSlot;
 	uint32 NextSlotIndex = NextItemArraySlotIndex(CurrentSlotIndex);
 	while (CurrentSlotIndex == NextSlotIndex || IgnoreSlotsWhileSwitching.Contains((EEquipmentSlots)NextSlotIndex) || !IsValid(ItemsArray[NextSlotIndex]))
@@ -261,6 +275,20 @@ void UCharacterEquipmentComponent::EquipNextItem()
 
 void UCharacterEquipmentComponent::EquipPreviousItem()
 {
+	if (CachedBaseCharacter->IsPlayerControlled())
+	{
+		if (IsSelectingWeapon())
+		{
+			WeaponWheelWidget->PreviousSegment();
+		}
+		else
+		{
+			APlayerController* PlayerController = CachedBaseCharacter->GetController<APlayerController>();
+			OpenWeaponWheel(PlayerController);
+		}
+		return;
+	}
+
 	uint32 CurrentSlotIndex = (uint32)CurrentEquippedSlot;
 	uint32 PreviousSlotIndex = PreviousItemArraySlotIndex(CurrentSlotIndex);
 	while (CurrentSlotIndex == PreviousSlotIndex || IgnoreSlotsWhileSwitching.Contains((EEquipmentSlots)PreviousSlotIndex) || !IsValid(ItemsArray[PreviousSlotIndex]))
@@ -418,7 +446,7 @@ void UCharacterEquipmentComponent::OpenViewEquipment(APlayerController* PlayerCo
 {
 	if (!IsValid(ViewWidget))
 	{
-		CreateViewWidget(PlayerController);
+		CreateEquipmentWidgets(PlayerController);
 	}
 
 	if (!ViewWidget->IsVisible())
@@ -450,9 +478,9 @@ const TArray<AEquipableItem*>& UCharacterEquipmentComponent::GetItems() const
 	return ItemsArray;
 }
 
-void UCharacterEquipmentComponent::CreateViewWidget(APlayerController* PlayerController)
+void UCharacterEquipmentComponent::CreateEquipmentWidgets(APlayerController* PlayerController)
 {
-	checkf(IsValid(ViewWidgetClass), TEXT("UCharacterEquipmentComponent::CreateViewWidget view widget class is not defined"));
+	checkf(IsValid(ViewWidgetClass), TEXT("UCharacterEquipmentComponent::CreateEquipmentWidgets view widget class is not defined"));
 
 	if (!IsValid(PlayerController))
 	{
@@ -461,6 +489,9 @@ void UCharacterEquipmentComponent::CreateViewWidget(APlayerController* PlayerCon
 
 	ViewWidget = CreateWidget<UEquipmentViewWidget>(PlayerController, ViewWidgetClass);
 	ViewWidget->InitializeEquipmentWidget(this);
+
+	WeaponWheelWidget = CreateWidget<UWeaponWheelWidget>(PlayerController, WeaponWheelClass);
+	WeaponWheelWidget->InitializeWeaponWheelWidget(this);
 }
 
 int32 UCharacterEquipmentComponent::AddAmmo(int32 NumberOfAmmo, EAmunitionType AmmoType)
@@ -472,4 +503,27 @@ int32 UCharacterEquipmentComponent::AddAmmo(int32 NumberOfAmmo, EAmunitionType A
 		}
 	}
 	return AmmunitionArray[(uint32)AmmoType];
+}
+
+bool UCharacterEquipmentComponent::IsSelectingWeapon() const
+{
+	return WeaponWheelWidget && WeaponWheelWidget->IsVisible();
+}
+
+void UCharacterEquipmentComponent::OpenWeaponWheel(APlayerController* PlayerController)
+{
+	if (!IsValid(WeaponWheelWidget))
+	{
+		CreateEquipmentWidgets(PlayerController);
+	}
+
+	if (!WeaponWheelWidget->IsVisible())
+	{
+		WeaponWheelWidget->AddToViewport();
+	}
+}
+
+void UCharacterEquipmentComponent::ConfirmWeaponSelection() const
+{
+	WeaponWheelWidget->ConfirmSelection();
 }

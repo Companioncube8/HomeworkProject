@@ -8,6 +8,7 @@
 #include "Components/ActorComponent.h"
 #include "CharacterEquipmentComponent.generated.h"
 
+class UWeaponWheelWidget;
 class UEquipmentViewWidget;
 class AMeleeWeaponItem;
 typedef TArray<class AEquipableItem*, TInlineAllocator<(uint32)EEquipmentSlots::MAX>> TItemsArray;
@@ -61,6 +62,12 @@ public:
 	void CloseViewEquipment();
 	bool IsViewVisible() const;
 
+	void OpenWeaponWheel(APlayerController* PlayerController);
+
+	bool IsSelectingWeapon() const;
+
+	void ConfirmWeaponSelection() const;
+
 	const TArray<AEquipableItem*>& GetItems() const;
 protected:
 	virtual void BeginPlay() override;
@@ -80,7 +87,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "View")
 	TSubclassOf<UEquipmentViewWidget> ViewWidgetClass;
 
-	void CreateViewWidget(APlayerController* PlayerController);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "View")
+	TSubclassOf<UWeaponWheelWidget> WeaponWheelClass;
+
+	void CreateEquipmentWidgets(APlayerController* PlayerController);
 private:
 	UFUNCTION(Server, Reliable)
 	void Server_EquipItemInSlot(EEquipmentSlots Slot);
@@ -135,4 +145,6 @@ private:
 
 	void AutoEquip();
 	void InitializeAmunition();
+
+	UWeaponWheelWidget* WeaponWheelWidget;
 };

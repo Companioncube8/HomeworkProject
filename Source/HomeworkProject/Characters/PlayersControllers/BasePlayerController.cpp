@@ -56,6 +56,7 @@ void ABasePlayerController::SetupInputComponent()
 	InputComponent->BindAction("SecondaryMeleeAttack", EInputEvent::IE_Pressed, this, &ABasePlayerController::SecondaryMeleeAttack);
 	InputComponent->BindAction("UseInventory", EInputEvent::IE_Pressed, this, &ABasePlayerController::UseInventory);
 	InputComponent->BindAction(ActionInteract, EInputEvent::IE_Pressed, this, &ABasePlayerController::Interact);
+	InputComponent->BindAction("ConfirmWeaponWheelSelection", EInputEvent::IE_Pressed, this, &ABasePlayerController::ConfirmWeaponWheelSelection);
 	FInputActionBinding& ToggleMainBinding = InputComponent->BindAction("ToggleMainMenu", EInputEvent::IE_Pressed, this, &ABasePlayerController::ToggleMainMenu);
 	ToggleMainBinding.bExecuteWhenPaused = true;
 }
@@ -335,6 +336,16 @@ void ABasePlayerController::UseInventory()
 }
 
 
+void ABasePlayerController::ConfirmWeaponWheelSelection()
+{
+	if (CachedBaseCharacter.IsValid())
+	{
+		CachedBaseCharacter->ConfirmWeaponSelection();
+	}
+
+}
+
+
 void ABasePlayerController::ToggleMainMenu()
 {
 	if (!MainMenuWidget || !PlayerHUDWidget)
@@ -359,7 +370,6 @@ void ABasePlayerController::ToggleMainMenu()
 		bShowMouseCursor = true;
 	}
 }
-
 
 void ABasePlayerController::CreateAndInitializeWidgets()
 {

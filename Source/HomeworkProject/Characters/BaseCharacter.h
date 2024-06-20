@@ -217,6 +217,8 @@ public:
 	void UpdateAmunitionCountInInventory(int32 Count, EAmunitionType AmunitionType);
 
 	int32 IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount, EAmunitionType AmunitionType);
+
+	void ConfirmWeaponSelection();
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();

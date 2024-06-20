@@ -637,6 +637,10 @@ const UCharacterEquipmentComponent* ABaseCharacter::GetCharacterEquipmentCompone
 
 void ABaseCharacter::PlayerStartFire()
 {
+	if (CharacterEquipmentComponent->IsSelectingWeapon())
+	{
+		return;
+	}
 	if (CharacterEquipmentComponent->IsEquipping())
 	{
 		return;
@@ -921,5 +925,13 @@ void ABaseCharacter::UseInventory(ABasePlayerController* PlayerController)
 		CharacterEquipmentComponent->CloseViewEquipment();
 		PlayerController->SetInputMode(FInputModeGameOnly{});
 		PlayerController->bShowMouseCursor = false;
+	}
+}
+
+void ABaseCharacter::ConfirmWeaponSelection()
+{
+	if (CharacterEquipmentComponent->IsSelectingWeapon())
+	{
+		CharacterEquipmentComponent->ConfirmWeaponSelection();
 	}
 }

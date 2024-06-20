@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actors/Interactive/Interface/Interactive.h"
 #include "GameFramework/Actor.h"
 #include "PickableItem.generated.h"
 

@@ -81,6 +81,8 @@ private:
 
 	void UseInventory();
 
+	void ConfirmWeaponWheelSelection();
+
 private:
 	bool bIgnoreCameraPitch = false;
 
