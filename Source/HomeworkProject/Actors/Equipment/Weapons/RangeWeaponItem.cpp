@@ -386,3 +386,11 @@ void ARangeWeaponItem::Multicast_EndReload_Implementation(bool bIsSuccess)
 	EndReloadReplicated(bIsSuccess);
 }
 
+void ARangeWeaponItem::OnLevelDeserialized_Implementation()
+{
+	SetActorRelativeTransform(FTransform(FRotator::ZeroRotator, FVector::ZeroVector));
+	if (OnAmmoChanged.IsBound())
+	{
+		OnAmmoChanged.Broadcast(Ammo[IndexCurrentFireMode]);
+	}
+}

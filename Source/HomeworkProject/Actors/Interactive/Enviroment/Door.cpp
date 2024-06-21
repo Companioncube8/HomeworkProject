@@ -75,6 +75,12 @@ FName ADoor::GetActionEventName() const
 }
 
 
+void ADoor::OnLevelDeserialized_Implementation()
+{
+	float YawAngle = bIsOpened ? AngleOpened : AngleClosed;
+	DoorPivot->SetRelativeRotation(FRotator(0.f, YawAngle, 0.f));
+}
+
 void ADoor::Interact(ABaseCharacter* Character)
 {
 	ensureMsgf(DoorAnimationCurve, TEXT("Dore animation curve is not set"));

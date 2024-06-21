@@ -19,7 +19,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquippedItemChanged, const AEquipableItem
 
 class AThrowableItem;
 UCLASS(BlueprintType)
-class HOMEWORKPROJECT_API UCharacterEquipmentComponent : public UActorComponent
+class HOMEWORKPROJECT_API UCharacterEquipmentComponent : public UActorComponent, public  ISaveSubsystemInterface
 {
 	GENERATED_BODY()
 public:
@@ -69,6 +69,8 @@ public:
 	void ConfirmWeaponSelection() const;
 
 	const TArray<AEquipableItem*>& GetItems() const;
+
+	virtual void OnLevelDeserialized_Implementation() override;
 protected:
 	virtual void BeginPlay() override;
 
@@ -105,10 +107,10 @@ private:
 	UFUNCTION()
 	void OnCurrentWeaponAmmoChanged(int32 Ammo);
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, SaveGame)
 	TArray<int32> AmmunitionArray;
 
-	UPROPERTY(ReplicatedUsing = OnRep_ItemsArray)
+	UPROPERTY(ReplicatedUsing = OnRep_ItemsArray, SaveGame)
 	TArray<AEquipableItem*> ItemsArray;
 
 	UFUNCTION()
@@ -124,7 +126,7 @@ private:
 	AThrowableItem* CurrentThrowableItem;
 	AMeleeWeaponItem* CurrentMeleeWeapon;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentEquipSlot)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentEquipSlot, SaveGame)
 	EEquipmentSlots CurrentEquippedSlot;
 
 	UFUNCTION()

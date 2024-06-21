@@ -172,3 +172,8 @@ void UCharacterAttributeComponent::RestoreFullStamina()
 	OnStaminaPercentChanged.ExecuteIfBound(CurrentStamina / MaxStamina);
 	OnOutOfStamina.Broadcast(false);
 }
+
+void UCharacterAttributeComponent::OnLevelDeserialized_Implementation()
+{
+	OnHealthChanged();
+}

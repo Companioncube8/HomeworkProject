@@ -68,7 +68,7 @@ struct FFireModeInfo
 };
 
 UCLASS(Blueprintable)
-class HOMEWORKPROJECT_API ARangeWeaponItem : public AEquipableItem
+class HOMEWORKPROJECT_API ARangeWeaponItem : public AEquipableItem, public ISaveSubsystemInterface
 {
 	GENERATED_BODY()
 public:
@@ -115,6 +115,8 @@ public:
 	virtual EReticleType GetReticleType() const override;
 
 	void ChangeFireMode();
+
+	virtual void OnLevelDeserialized_Implementation() override;
 protected:
 	virtual void BeginPlay() override;
 
@@ -154,7 +156,7 @@ protected:
 
 private:
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, SaveGame)
 	TArray<int32> Ammo;
 
 	bool bIsFiring = false;

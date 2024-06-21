@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Subsystems/SaveSubsystem/SaveSubsystemInterface.h"
 #include "CharacterAttributeComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnOutOfStamina, bool)
@@ -11,7 +12,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnOutOfOxigen, bool)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class HOMEWORKPROJECT_API UCharacterAttributeComponent : public UActorComponent
+class HOMEWORKPROJECT_API UCharacterAttributeComponent : public UActorComponent, public  ISaveSubsystemInterface
 {
 	GENERATED_BODY()
 
@@ -45,6 +46,8 @@ public:
 
 	void RestoreFullStamina();
 
+	virtual void OnLevelDeserialized_Implementation() override;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -71,7 +74,7 @@ protected:
 	float SwimOxygenConsumptionVelocity = 2.0f;
 
 private:
-	UPROPERTY(ReplicatedUsing=OnRep_Health)
+	UPROPERTY(ReplicatedUsing=OnRep_Health, SaveGame)
 	float Health = 0.f;
 
 	UFUNCTION()

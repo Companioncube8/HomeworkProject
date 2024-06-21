@@ -39,6 +39,12 @@ void UCharacterEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	DOREPLIFETIME(UCharacterEquipmentComponent, ItemsArray);
 }
 
+void UCharacterEquipmentComponent::OnLevelDeserialized_Implementation()
+{
+	EquipItemInSlot(CurrentEquippedSlot);
+}
+
+
 void UCharacterEquipmentComponent::CreateLoadout()
 {
 	if (GetOwner()->GetLocalRole() < ROLE_Authority) {
@@ -343,7 +349,7 @@ void UCharacterEquipmentComponent::LaunchCurrentThrowableItem()
 		AmmunitionArray[(uint32)EAmunitionType::FragGrenades] -= 1;
 		OnThrowableItemsCountChangedEvent.ExecuteIfBound(AmmunitionArray[(uint32)EAmunitionType::FragGrenades]);
 
-		CachedBaseCharacter->UpdateAmunitionCountInInventory(AmmunitionArray[(uint32)CurrentEquippedWeapon->GetAmmoType()], CurrentEquippedWeapon->GetAmmoType());
+		CachedBaseCharacter->UpdateAmunitionCountInInventory(AmmunitionArray[(uint32)EAmunitionType::FragGrenades], EAmunitionType::FragGrenades);
 
 		bIsEquipping = false;
 		if (CachedBaseCharacter->IsLocallyControlled()) {

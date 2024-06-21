@@ -6,16 +6,19 @@
 #include "Actors/Interactive/Interface/Interactive.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Actor.h"
+#include "Subsystems/SaveSubsystem/SaveSubsystemInterface.h"
 #include "Door.generated.h"
 
 UCLASS()
-class HOMEWORKPROJECT_API ADoor : public AActor, public IInteractable
+class HOMEWORKPROJECT_API ADoor : public AActor, public IInteractable, public ISaveSubsystemInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	ADoor();
+
+	virtual void OnLevelDeserialized_Implementation() override;
 
 	virtual void Interact(ABaseCharacter* Character) override;
 
@@ -60,5 +63,6 @@ private:
 
 	FTimeline DoorOpenAnimTimeline;
 
+	UPROPERTY(SaveGame)
 	bool bIsOpened = false;
 };

@@ -58,7 +58,7 @@ struct FActorSaveData : public FObjectSaveData
 {
 	GENERATED_BODY()
 
-		FActorSaveData();
+	FActorSaveData();
 	FActorSaveData(const AActor* Actor);
 
 	virtual bool Serialize(FArchive& Archive) override;
