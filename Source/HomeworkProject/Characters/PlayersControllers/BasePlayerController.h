@@ -83,6 +83,9 @@ private:
 
 	void ConfirmWeaponWheelSelection();
 
+
+	void QuickSaveGame();
+	void QuickLoadGame();
 private:
 	bool bIgnoreCameraPitch = false;
 

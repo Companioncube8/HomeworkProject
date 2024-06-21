@@ -88,10 +88,6 @@ void ABaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-void ABaseCharacter::OnLevelDeserialized_Implementation()
-{
-}
-
 
 void ABaseCharacter::PossessedBy(AController* NewController)
 {

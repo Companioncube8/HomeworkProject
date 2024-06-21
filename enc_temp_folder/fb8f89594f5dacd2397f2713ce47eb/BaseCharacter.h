@@ -6,7 +6,6 @@
 #include "GenericTeamAgentInterface.h"
 #include "HomeworkProjectTypes.h"
 #include "GameFramework/Character.h"
-#include "Subsystems/SaveSubsystem/SaveSubsystemInterface.h"
 #include "BaseCharacter.generated.h"
 
 class ABasePlayerController;
@@ -59,7 +58,7 @@ class UCharacterEquipmentComponent;
 class UCharacterAttributeComponent;
 
 UCLASS(Abstract, NotBlueprintable)
-class HOMEWORKPROJECT_API ABaseCharacter : public ACharacter, public IGenericTeamAgentInterface, public ISaveSubsystemInterface
+class HOMEWORKPROJECT_API ABaseCharacter : public ACharacter, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -67,12 +66,6 @@ public:
 	ABaseCharacter(const FObjectInitializer& ObjectInitializer);
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-	//@ ISaveSubsystemInterface
-
-	virtual void OnLevelDeserialized_Implementation() override;
-
-	//~ISaveSubsystemInterface
 
 	virtual void PossessedBy(AController* NewController) override;
 

@@ -7,6 +7,8 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/CharacterComponents/CharacterEquipmentComponent.h"
 #include "GameFramework/PlayerInput.h"
+#include "Kismet/GameplayStatics.h"
+#include "Subsystems/SaveSubsystem/SaveSubsystem.h"
 #include "UI/Widget/PlayerHUDWidget.h"
 
 void ABasePlayerController::SetPawn(APawn* InPawn)
@@ -57,6 +59,8 @@ void ABasePlayerController::SetupInputComponent()
 	InputComponent->BindAction("UseInventory", EInputEvent::IE_Pressed, this, &ABasePlayerController::UseInventory);
 	InputComponent->BindAction(ActionInteract, EInputEvent::IE_Pressed, this, &ABasePlayerController::Interact);
 	InputComponent->BindAction("ConfirmWeaponWheelSelection", EInputEvent::IE_Pressed, this, &ABasePlayerController::ConfirmWeaponWheelSelection);
+	InputComponent->BindAction("QuickSaveGame", EInputEvent::IE_Pressed, this, &ABasePlayerController::QuickSaveGame);
+	InputComponent->BindAction("QuickLoadGame", EInputEvent::IE_Pressed, this, &ABasePlayerController::QuickLoadGame);
 	FInputActionBinding& ToggleMainBinding = InputComponent->BindAction("ToggleMainMenu", EInputEvent::IE_Pressed, this, &ABasePlayerController::ToggleMainMenu);
 	ToggleMainBinding.bExecuteWhenPaused = true;
 }
@@ -406,3 +410,16 @@ void ABasePlayerController::OnInteractableObjectFound(FName ActionName)
 	}
 	PlayerHUDWidget->SetHighlightInteractableVisibility(HasAnyKeys);
 }
+
+void ABasePlayerController::QuickLoadGame()
+{
+	USaveSubsystem* SaveSubsystem = UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<USaveSubsystem>();
+	SaveSubsystem->LoadLastGame();
+}
+
+void ABasePlayerController::QuickSaveGame()
+{
+	USaveSubsystem* SaveSubsystem = UGameplayStatics::GetGameInstance(GetWorld())->GetSubsystem<USaveSubsystem>();
+	SaveSubsystem->SaveGame();
+}
+
