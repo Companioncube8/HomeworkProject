@@ -84,7 +84,7 @@ bool FLevelSaveData::Serialize(FArchive& Archive)
 }
 
 FGameSaveData::FGameSaveData()
-	: Level(FName(TEXT("Persistent")))
+	: PersistentLevel(FName(TEXT("Persistent")))
 	, StartTransform(FTransform::Identity)
 	, bIsSerialized(false)
 {
@@ -94,7 +94,8 @@ bool FGameSaveData::Serialize(FArchive& Archive)
 {
 	Super::Serialize(Archive);
 	Archive << LevelName;
-	Archive << Level;
+	Archive << PersistentLevel;
+	Archive << StreamingLevels;
 	Archive << GameInstance;
 	Archive << StartTransform;
 

@@ -48,6 +48,8 @@ void USaveSubsystem::LoadGame(int32 SaveId)
 		return;
 	}
 
+	RemoveStreamingLevelObservers();
+
 	LoadSaveFromFile(SaveId);
 	UGameplayStatics::OpenLevel(this, GameSaveData.LevelName);
 }
@@ -65,6 +67,8 @@ void USaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*SaveDirectoryName, DirectoryVisitor);
 	SaveIds.Sort();
 
+	CreateStreamingLevelObservers(GetWorld());
+
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &USaveSubsystem::OnPostLoadMapWithWorld);
 }
 
@@ -74,6 +78,8 @@ void USaveSubsystem::Deinitialize()
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
+	RemoveStreamingLevelObservers();
+
 	Super::Deinitialize();
 }
 
@@ -82,7 +88,14 @@ void USaveSubsystem::SerializeLevel(const ULevel* Level, const ULevelStreaming* 
 	UE_LOG(LogSaveSubsystem, Display, TEXT("USaveSubsystem::SerializeLevel(): %s, Level: %s, StreamingLevel: %s"), *GetNameSafe(this), *GetNameSafe(Level), *GetNameSafe(StreamingLevel));
 
 	FLevelSaveData* LevelSaveData = nullptr;
-	LevelSaveData = &GameSaveData.Level;
+	if (StreamingLevel)
+	{
+		TArray<FLevelSaveData>& StreamingLevels = GameSaveData.StreamingLevels;
+		LevelSaveData = &StreamingLevels[StreamingLevels.Emplace(StreamingLevel->GetWorldAssetPackageFName())];
+	} else
+	{
+		LevelSaveData = &GameSaveData.PersistentLevel;
+	}
 
 	TArray<FActorSaveData>& ActorsSaveData = LevelSaveData->ActorsSaveData;
 	ActorsSaveData.Empty();
@@ -120,7 +133,16 @@ void USaveSubsystem::DeserializeLevel(ULevel* Level, const ULevelStreaming* Stre
 	UE_LOG(LogSaveSubsystem, Display, TEXT("USaveSubsystem::DeserializeLevel(): %s, Level: %s, StreamingLevel: %s"), *GetNameSafe(this), *GetNameSafe(Level), *GetNameSafe(StreamingLevel));
 
 	FLevelSaveData* LevelSaveData = nullptr;
-	LevelSaveData = &GameSaveData.Level;
+
+	if (StreamingLevel)
+	{
+		const FName LevelName = StreamingLevel->GetWorldAssetPackageFName();
+		LevelSaveData = GameSaveData.StreamingLevels.FindByPredicate([=](const FLevelSaveData& Data) { return Data.Name == LevelName; });
+	}
+	else
+	{
+		LevelSaveData = &GameSaveData.PersistentLevel;
+	}
 
 	if (LevelSaveData == nullptr)
 	{
@@ -253,6 +275,14 @@ void USaveSubsystem::SerializeGame()
 	}
 
 	SerializeLevel(World->PersistentLevel);
+
+	for (const ULevelStreaming* Level : World->GetStreamingLevels())
+	{
+		if (Level->IsLevelLoaded() && Level->GetCurrentState() == ULevelStreaming::ECurrentState::LoadedVisible)
+		{
+			SerializeLevel(Level->GetLoadedLevel(), Level);
+		}
+	}
 }
 
 void USaveSubsystem::DeserializeGame()
@@ -272,6 +302,14 @@ void USaveSubsystem::DeserializeGame()
 	const UWorld* World = GetWorld();
 
 	DeserializeLevel(World->PersistentLevel);
+
+	for (const ULevelStreaming* Level : World->GetStreamingLevels())
+	{
+		if (Level->IsLevelLoaded())
+		{
+			DeserializeLevel(Level->GetLoadedLevel(), Level);
+		}
+	}
 }
 
 void USaveSubsystem::WriteSaveToFile()
@@ -341,6 +379,7 @@ void USaveSubsystem::LoadSaveFromFile(int32 SaveId)
 void USaveSubsystem::OnPostLoadMapWithWorld(UWorld* LoadedWorld)
 {
 	UE_LOG(LogSaveSubsystem, Display, TEXT("USaveSubsystem::OnPostLoadMapWithWorld(): %s, World: %s"), *GetNameSafe(this), *GetNameSafe(LoadedWorld));
+	CreateStreamingLevelObservers(LoadedWorld);
 	DeserializeGame();
 }
 
@@ -391,11 +430,76 @@ void USaveSubsystem::OnActorSpawned(AActor* SpawnedActor)
 		return;
 	}
 
-	if (IsValid(SpawnedActor) && SpawnedActor->Implements<USaveSubsystemInterface>())
+	if (IsValid(SpawnedActor) && SpawnedActor->HasActorBegunPlay() && SpawnedActor->Implements<USaveSubsystemInterface>())
 	{
 		// We should notify a runtime spawned actors too.
 		NotifyActorsAndComponents(SpawnedActor);
 	}
 }
 
+void USaveSubsystem::CreateStreamingLevelObservers(UWorld* World)
+{
+	UE_LOG(LogSaveSubsystem, Display, TEXT("USaveSubsystem::CreateStreamingLevelObservers(): %s, World: %s"), *GetNameSafe(this), *GetNameSafe(World));
 
+	RemoveStreamingLevelObservers();
+
+	if (!IsValid(World))
+	{
+		return;
+	}
+
+
+	FOnActorSpawned::FDelegate OnActorSpawnedDelegate = FOnActorSpawned::FDelegate::CreateUObject(this, &USaveSubsystem::OnActorSpawned);
+	OnActorSpawnedDelegateHandle = World->AddOnActorSpawnedHandler(OnActorSpawnedDelegate);
+
+	const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
+	StreamingLevelObservers.Reserve(StreamingLevels.Num());
+	for (ULevelStreaming* Level : StreamingLevels)
+	{
+		UStreamingLevelObserver* Observer = NewObject<UStreamingLevelObserver>(this);
+		Observer->Initialize(this, Level);
+		StreamingLevelObservers.Add(Observer);
+	}
+}
+
+void USaveSubsystem::RemoveStreamingLevelObservers()
+{
+	UE_LOG(LogSaveSubsystem, Display, TEXT("USaveSubsystem::RemoveStreamingLevelObservers(): %s"), *GetNameSafe(this));
+
+	UWorld* World = GetWorld();
+	if (IsValid(World))
+	{
+		World->RemoveOnActorSpawnedHandler(OnActorSpawnedDelegateHandle);
+	}
+
+	OnActorSpawnedDelegateHandle.Reset();
+
+	for (UStreamingLevelObserver* Observer : StreamingLevelObservers)
+	{
+		if (!IsValid(Observer))
+		{
+			continue;
+		}
+
+		Observer->Deinitialize();
+	}
+
+	StreamingLevelObservers.Empty();
+}
+
+UWorld* USaveSubsystem::GetWorld() const
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (IsValid(GameInstance))
+	{
+		return GameInstance->GetWorld();
+	}
+
+	UObject* Outer = GetOuter();
+	if (IsValid(Outer))
+	{
+		return Outer->GetWorld();
+	}
+
+	return nullptr;
+}

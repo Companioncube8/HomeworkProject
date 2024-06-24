@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SaveData.h"
+#include "SaveSubsystemTypes.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "SaveSubsystem.generated.h"
 
@@ -32,7 +33,12 @@ public:
 	void SerializeLevel(const ULevel* Level, const ULevelStreaming* StreamingLevel = nullptr);
 	void DeserializeLevel(ULevel* Level, const ULevelStreaming* StreamingLevel = nullptr);
 
+	virtual UWorld* GetWorld() const override;
+
 private:
+	void CreateStreamingLevelObservers(UWorld* World);
+	void RemoveStreamingLevelObservers();
+
 	void SerializeGame();
 	void DeserializeGame();
 	void WriteSaveToFile();
@@ -53,5 +59,7 @@ private:
 	bool bUseCompressedSaves = false;
 	/** Used to avoid double @OnLevelDeserialized invocation */
 	bool bIgnoreOnActorSpawnedCallback = false;
-	
+
+	UPROPERTY(Transient)
+	TArray<UStreamingLevelObserver*> StreamingLevelObservers;
 };

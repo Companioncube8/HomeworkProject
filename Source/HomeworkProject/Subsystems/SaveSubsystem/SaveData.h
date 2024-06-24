@@ -68,7 +68,7 @@ struct FActorSaveData : public FObjectSaveData
 };
 
 /**
- * Level data that will be saved/loaded.
+ * PersistentLevel data that will be saved/loaded.
  */
 USTRUCT()
 struct FLevelSaveData : public FBaseSaveData
@@ -98,7 +98,8 @@ public:
 	virtual bool Serialize(FArchive& Archive) override;
 
 	FName LevelName;
-	FLevelSaveData Level;
+	FLevelSaveData PersistentLevel;
+	TArray<FLevelSaveData> StreamingLevels;
 	FObjectSaveData GameInstance;
 	FTransform StartTransform;
 
