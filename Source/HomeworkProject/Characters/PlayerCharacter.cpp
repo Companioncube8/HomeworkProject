@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "HomeworkProject/Components/MovemenyComponents/BaseCharacterMovementComponent.h"
+#include "Subsystems/Streaming/StreamingSubsystemUtils.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
@@ -53,6 +54,8 @@ void APlayerCharacter::BeginPlay() {
 
 		FOVTimeline->AddInterpFloat(FOVTimelineCurve, FOVTimelineUpdate);
 	}
+
+	UStreamingSubsystemUtils::CheckCharacterOverlapStreamingSubsystemVolume(this);
 }
 void APlayerCharacter::MoveForward(float Value)
 {
