@@ -21,6 +21,8 @@ public:
 	bool GetIgnoreCameraPitch() const;
 	void SetIgnoreCameraPitch(bool bIgnoreCameraPitch_In);
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	ABaseCharacter* GetBaseCharacter() { return  CachedBaseCharacter.Get(); }
 
 protected:

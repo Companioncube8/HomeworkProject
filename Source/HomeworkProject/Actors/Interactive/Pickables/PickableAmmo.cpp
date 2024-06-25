@@ -23,11 +23,6 @@ FName APickableAmmo::GetActionEventName() const
 	return ActionInteract;
 }
 
-void APickableAmmo::SetCount(int32 NewCount)
-{
-	Count = NewCount;
-}
-
 
 void APickableAmmo::Interact(ABaseCharacter* Character)
 {

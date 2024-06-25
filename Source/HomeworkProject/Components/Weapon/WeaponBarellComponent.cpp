@@ -160,6 +160,7 @@ void UWeaponBarellComponent::ProcessHit(const FHitResult& HitResult, const FVect
 
 void UWeaponBarellComponent::ShotInternal(const TArray<FShotInfo>& ShotsInfos)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UWeaponBarellComponent::ShotInternal"));
 	if (GetOwner()->HasAuthority())
 	{
 		LastShotsInfo = ShotsInfos;

@@ -18,7 +18,7 @@ public:
 	APickableAmmo();
 	virtual void Interact(ABaseCharacter* Character) override;
 	virtual FName GetActionEventName() const override;
-	void SetCount(int32 NewCount);
+	void SetCount(int32 NewCount) { Count = NewCount; };
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

@@ -7,6 +7,7 @@
 #include "HomeworkProjectTypes.h"
 #include "GameFramework/Character.h"
 #include "Subsystems/SaveSubsystem/SaveSubsystemInterface.h"
+#include "SignificanceManager.h"
 #include "BaseCharacter.generated.h"
 
 class ABasePlayerController;
@@ -221,11 +222,26 @@ public:
 	bool PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup);
 	void UseInventory(ABasePlayerController* PlayerController);
 
-	void UpdateAmunitionCountInInventory(int32 Count, EAmunitionType AmunitionType);
+	void DecreaseCountInExistSlot(int32 Count, EAmunitionType AmunitionType);
 
 	int32 IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount, EAmunitionType AmunitionType);
 
 	void ConfirmWeaponSelection();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float VeryHighSignificanceDistance = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float HighSignificanceDistance = 1500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float MediumSignificanceDistance = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float LowSignificanceDistance = 6000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	bool bIsSignificanceEnable = true;
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();
@@ -340,6 +356,8 @@ protected:
 	TScriptInterface<IInteractable> LineOfSightObject;
 
 private:
+	float SignificanceFunction(USignificanceManager::FManagedObjectInfo* ObjectInfo, const FTransform& ViewPoint);
+	void PostSignificanceFunction(USignificanceManager::FManagedObjectInfo* ObjectInfo, float OldSignificance, float Significance, bool bFinal);
 
 	FVector GetIKOutHitLocationForASocket(const FName& SocketName);
 

@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/SaveSubsystem/SaveSubsystem.h"
 #include "UI/Widget/PlayerHUDWidget.h"
+#include "SignificanceManager.h"
 
 void ABasePlayerController::SetPawn(APawn* InPawn)
 {
@@ -64,6 +65,22 @@ void ABasePlayerController::SetupInputComponent()
 	FInputActionBinding& ToggleMainBinding = InputComponent->BindAction("ToggleMainMenu", EInputEvent::IE_Pressed, this, &ABasePlayerController::ToggleMainMenu);
 	ToggleMainBinding.bExecuteWhenPaused = true;
 }
+
+void ABasePlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	USignificanceManager* SignificanceManager = FSignificanceManagerModule::Get(GetWorld());
+	if (SignificanceManager)
+	{
+		FVector ViewLocation;
+		FRotator ViewRotation;
+		GetPlayerViewPoint(ViewLocation, ViewRotation);
+		FTransform ViewTransform(ViewRotation, ViewLocation);
+		TArray<FTransform> ViewPoints = { ViewTransform };
+		SignificanceManager->Update(ViewPoints);
+	}
+}
+
 
 bool ABasePlayerController::GetIgnoreCameraPitch() const
 {
