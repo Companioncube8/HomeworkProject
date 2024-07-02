@@ -3,7 +3,10 @@
 
 #include "Components/Weapon/WeaponBarellComponent.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
 #include "DrawDebugHelpers.h"
+#include "GameplayEffect.h"
 #include "HomeworkProjectTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/DebugSubsystem.h"
@@ -139,15 +142,30 @@ void UWeaponBarellComponent::ProcessHit(const FHitResult& HitResult, const FVect
 	AActor* HitActor = HitResult.GetActor();
 	if (GetOwner()->HasAuthority() && IsValid(HitActor))
 	{
-		float DamageCoef = 1;
-		if (FalloffDiagram != nullptr) {
-			DamageCoef = FalloffDiagram->GetFloatValue(HitResult.Distance);
+		IAbilitySystemInterface* AbilitySystemActor = Cast<IAbilitySystemInterface>(HitActor);
+		if (DamageEffectClass && AbilitySystemActor)
+		{
+			float DamageCoef = 1;
+			if (FalloffDiagram != nullptr) {
+				DamageCoef = FalloffDiagram->GetFloatValue(HitResult.Distance);
+			}
+			UGameplayEffect* DamageEffect = DamageEffectClass->GetDefaultObject<UGameplayEffect>();
+			FGameplayEffectContext* DamageEffectContext = new FGameplayEffectContext(GetController(), GetOwner());
+			DamageEffectContext->AddHitResult(HitResult);
+			FGameplayEffectContextHandle DamageEffectContextHandle(DamageEffectContext);
+			FGameplayEffectSpec DamageEffectSpec(DamageEffect, DamageEffectContextHandle);
+
+			DamageEffectSpec.SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Abilities.Attributes.Health")), (FireInfo.DamageAmount * DamageCoef));
+
+			UAbilitySystemComponent* AbilitySystem = AbilitySystemActor->GetAbilitySystemComponent();
+			AbilitySystem->ApplyGameplayEffectSpecToSelf(DamageEffectSpec);
 		}
-		FPointDamageEvent DamageEvent;
-		DamageEvent.HitInfo = HitResult;
-		DamageEvent.ShotDirection = Direction;
-		DamageEvent.DamageTypeClass = DamageTypeClass;
-		HitActor->TakeDamage(FireInfo.DamageAmount * DamageCoef, DamageEvent, GetController(), GetOwner());
+		//FPointDamageEvent DamageEvent;
+		//DamageEvent.HitInfo = HitResult;
+		//DamageEvent.ShotDirection = Direction;
+		//DamageEvent.DamageTypeClass = DamageTypeClass;
+		//HitActor->TakeDamage(FireInfo.DamageAmount * DamageCoef, DamageEvent, GetController(), GetOwner());
+
 	}
 
 	UDecalComponent* DecalComponent = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DefaultDecalInfo.DecalMaterial, DefaultDecalInfo.DecalSize, HitResult.ImpactPoint, HitResult.ImpactNormal.ToOrientationRotator());

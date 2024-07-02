@@ -19,7 +19,9 @@ public class HomeworkProject : ModuleRules
 			"NavigationSystem",
 			"OnlineSubsystem",
 			"OnlineSubsystemUtils",
-			"SignificanceManager"
+			"SignificanceManager",
+			"GameplayAbilities",
+			"GameplayTags"
 		});
 
 		DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");

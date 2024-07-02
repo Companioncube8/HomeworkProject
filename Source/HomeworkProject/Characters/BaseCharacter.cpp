@@ -3,7 +3,10 @@
 
 #include "BaseCharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "AIController.h"
+#include "AbilitySystem/HomeworkAbilitySystemComponent.h"
+#include "AbilitySystem/AttributeSets/HomeworkCharacterAttributeSet.h"
 #include "Actors/Environment/PlatformTrigger.h"
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Actors/Interactive/Interface/Interactive.h"
@@ -51,6 +54,10 @@ ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
 
 	HealthBarProgressComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarProgressComponent"));
 	HealthBarProgressComponent->SetupAttachment(GetCapsuleComponent());
+
+	AbilitySystemComponent = CreateDefaultSubobject<UHomeworkAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
+	AttributeSet = CreateDefaultSubobject<UHomeworkCharacterAttributeSet>(TEXT("AttributeSet"));
 }
 
 void ABaseCharacter::InitializeHealthProgress()
@@ -66,9 +73,10 @@ void ABaseCharacter::InitializeHealthProgress()
 	{
 		HealthBarProgressComponent->SetVisibility(false);
 	}
+	Widget->SetAttributeSet(AttributeSet);/*
 	CharacterAttributesComponent->OnHealthChangedEvent.AddUObject(Widget, &UAttributeProgressBar::SetProgressPercentage);
 	CharacterAttributesComponent->OnDeathEvent.AddLambda([=]() {HealthBarProgressComponent->SetVisibility(false);});
-	Widget->SetProgressPercentage(CharacterAttributesComponent->GetHealthPercent());
+	Widget->SetProgressPercentage(CharacterAttributesComponent->GetHealthPercent());*/
 }
 
 void ABaseCharacter::BeginPlay()
@@ -91,6 +99,7 @@ void ABaseCharacter::BeginPlay()
 			);
 		}
 	}
+
 }
 
 void ABaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -116,6 +125,8 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 		FGenericTeamId TeamId((uint8)Team);
 		AIController->SetGenericTeamId(TeamId);
 	}
+
+	InitGameplayAbilitySystem(NewController);
 }
 
 void ABaseCharacter::ChangeCrouchState()
@@ -124,19 +135,15 @@ void ABaseCharacter::ChangeCrouchState()
 	{
 		return;
 	}
-	if (!BaseCharacterMovementComponent->IsProning() && !BaseCharacterMovementComponent->IsCrouching())
+	if (!BaseCharacterMovementComponent->IsProning() && !AbilitySystemComponent->IsAbilityActive(CrouchAbilityTag))
 	{
-		Crouch();
+		AbilitySystemComponent->TryActivateAbilityWithTag(CrouchAbilityTag);
 	}
 }
 
 void ABaseCharacter::StartSprint()
 {
 	bIsSprintRequested = true;
-	if (bIsCrouched)
-	{
-		UnCrouch();
-	}
 }
 
 void ABaseCharacter::StopSprint()
@@ -223,14 +230,15 @@ bool ABaseCharacter::CanJumpInternal_Implementation() const
 
 void ABaseCharacter::TryChangeSprintState(float DeltaTime)
 {
-	if (bIsSprintRequested && !BaseCharacterMovementComponent->IsSprinting() && CanSprint())
+	bool bIsSprintActive = AbilitySystemComponent->IsAbilityActive(SprintAbilityTag);
+	if (bIsSprintRequested && !bIsSprintActive && CanSprint())
 	{
-		BaseCharacterMovementComponent->StartSprint();
+		AbilitySystemComponent->TryActivateAbilityWithTag(SprintAbilityTag);
 	}
 
-	if (!bIsSprintRequested && BaseCharacterMovementComponent->IsSprinting())
+	if (bIsSprintActive && !(bIsSprintRequested  && CanSprint()))
 	{
-		BaseCharacterMovementComponent->StopSprint();
+		AbilitySystemComponent->TryCancelAbilityWithTag(SprintAbilityTag);
 	}
 
 	if (BaseCharacterMovementComponent->IsSprinting())
@@ -367,7 +375,7 @@ void ABaseCharacter::Mantle(bool bForce)
 		MantlingMovementParameters.InitialLocation = bIsCrouched ? GetActorLocation() + FVector::UpVector * BaseCharacterMovementComponent->CrouchedHalfHeight : GetActorLocation();
 		if (bIsCrouched)
 		{
-			UnCrouch();
+			AbilitySystemComponent->TryCancelAbilityWithTag(CrouchAbilityTag);
 		}
 		MantlingMovementParameters.InitialRotation = GetActorRotation();
 		MantlingMovementParameters.TargetLocation = LedgeDescription.Location;
@@ -849,7 +857,7 @@ FRotator ABaseCharacter::GetAimOffset()
 
 void ABaseCharacter::TraceLineOfSight()
 {
-	if (!IsPlayerControlled())
+	if (!IsPlayerControlled() || !IsLocallyControlled())
 	{
 		return;
 	}
@@ -1007,9 +1015,11 @@ void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObje
 
 	UCharacterMovementComponent* MovementComponent = Character->GetCharacterMovement();
 	AAIController* AIController = Character->GetController<AAIController>();
+	UWidgetComponent* Widget = Character->HealthBarProgressComponent;
 
 	if (Significance == SignificanceValueVeryHigh)
 	{
+		Widget->SetVisibility(true);
 		MovementComponent->SetComponentTickInterval(0.f);
 		Character->GetMesh()->SetComponentTickEnabled(true);
 		Character->GetMesh()->SetComponentTickInterval(0.f);
@@ -1020,6 +1030,7 @@ void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObje
 	}
 	else if (Significance == SignificanceValueHigh)
 	{
+		Widget->SetVisibility(true);
 		MovementComponent->SetComponentTickInterval(0.f);
 		Character->GetMesh()->SetComponentTickEnabled(true);
 		Character->GetMesh()->SetComponentTickInterval(0.05f);
@@ -1030,6 +1041,7 @@ void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObje
 	}
 	else if (Significance == SignificanceValueMedium)
 	{
+		Widget->SetVisibility(false);
 		MovementComponent->SetComponentTickInterval(0.1f);
 		Character->GetMesh()->SetComponentTickEnabled(true);
 		Character->GetMesh()->SetComponentTickInterval(0.1f);
@@ -1040,7 +1052,7 @@ void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObje
 	}
 	else if (Significance == SignificanceValueLow)
 	{
-
+		Widget->SetVisibility(false);
 		MovementComponent->SetComponentTickInterval(1.f);
 		Character->GetMesh()->SetComponentTickEnabled(true);
 		Character->GetMesh()->SetComponentTickInterval(1.f);
@@ -1051,7 +1063,7 @@ void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObje
 	}
 	else if (Significance == SignificanceValueVeryLow)
 	{
-
+		Widget->SetVisibility(false);
 		MovementComponent->SetComponentTickInterval(5.f);
 		Character->GetMesh()->SetComponentTickEnabled(false);
 		if (AIController)
@@ -1059,4 +1071,39 @@ void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObje
 			AIController->SetActorTickInterval(10.f);
 		}
 	}
+}
+
+UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void ABaseCharacter::InitGameplayAbilitySystem(AController* NewController)
+{
+	AbilitySystemComponent->InitAbilityActorInfo(NewController, this);
+	if (!bAreAbilityAdded)
+	{
+		for (TSubclassOf<UGameplayAbility>& AbilityClass : Abilities)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass));
+		}
+		bAreAbilityAdded = true;
+	}
+
+	for (const FGameplayTagContainer& InitialActivateAbility : InitialActivateAbilities)
+	{
+		AbilitySystemComponent->TryActivateAbilitiesByTag(InitialActivateAbility);
+	}
+
+}
+
+
+const UHomeworkCharacterAttributeSet* ABaseCharacter::GetCharacterAttributeSet() const
+{
+	return AttributeSet;
+}
+
+void ABaseCharacter::Die()
+{
+	OnDeath();
 }

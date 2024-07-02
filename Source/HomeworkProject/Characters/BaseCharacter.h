@@ -8,8 +8,11 @@
 #include "GameFramework/Character.h"
 #include "Subsystems/SaveSubsystem/SaveSubsystemInterface.h"
 #include "SignificanceManager.h"
+#include "AbilitySystemInterface.h"
+#include "Abilities/GameplayAbility.h"
 #include "BaseCharacter.generated.h"
 
+class UHomeworkCharacterAttributeSet;
 class ABasePlayerController;
 class UCharacterInventoryComponent;
 class UInventoryItem;
@@ -60,7 +63,7 @@ class UCharacterEquipmentComponent;
 class UCharacterAttributeComponent;
 
 UCLASS(Abstract, NotBlueprintable)
-class HOMEWORKPROJECT_API ABaseCharacter : public ACharacter, public IGenericTeamAgentInterface, public ISaveSubsystemInterface
+class HOMEWORKPROJECT_API ABaseCharacter : public ACharacter, public IGenericTeamAgentInterface, public ISaveSubsystemInterface, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -242,6 +245,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
 	bool bIsSignificanceEnable = true;
+
+
+	/** IAbilitySystemInterface**/
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	/** ~IAbilitySystemInterface**/
+
+	const UHomeworkCharacterAttributeSet* GetCharacterAttributeSet() const;
+
+	void Die();
+
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();
@@ -355,6 +370,29 @@ protected:
 	UPROPERTY()
 	TScriptInterface<IInteractable> LineOfSightObject;
 
+	//GameplayAbilities
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	class UHomeworkAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	UHomeworkCharacterAttributeSet* AttributeSet;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> Abilities;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	FGameplayTag SprintAbilityTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	FGameplayTag CrouchAbilityTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TArray<FGameplayTagContainer> InitialActivateAbilities;
+
+	bool bAreAbilityAdded;
+
+	//~GameplayAbilities
 private:
 	float SignificanceFunction(USignificanceManager::FManagedObjectInfo* ObjectInfo, const FTransform& ViewPoint);
 	void PostSignificanceFunction(USignificanceManager::FManagedObjectInfo* ObjectInfo, float OldSignificance, float Significance, bool bFinal);
@@ -395,4 +433,6 @@ private:
 	bool bIsAiming = false;
 
 	float CurrentAimingMovementSpeed = 0.f;
+
+	void InitGameplayAbilitySystem(AController* NewController);
 };

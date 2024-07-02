@@ -4,6 +4,7 @@
 #include "CharacterAttributeComponent.h"
 
 #include "DrawDebugHelpers.h"
+#include "AbilitySystem/AttributeSets/HomeworkCharacterAttributeSet.h"
 #include "Components/CapsuleComponent.h"
 #include "HomeworkProject/HomeworkProjectTypes.h"
 #include "HomeworkProject/Characters/BaseCharacter.h"
@@ -104,15 +105,17 @@ void UCharacterAttributeComponent::UpdateStaminaValue(float DeltaTime, bool bIsS
 	}
 	CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
 
-	OnStaminaPercentChanged.ExecuteIfBound(CurrentStamina / MaxStamina);
 
-	if (FMath::IsNearlyZero(CurrentStamina)) {
-		OnOutOfStamina.Broadcast(true);
-	}
-	else if (FMath::IsNearlyEqual(MaxStamina, CurrentStamina))
-	{
-		OnOutOfStamina.Broadcast(false);
-	}
+	const UHomeworkCharacterAttributeSet* CharacterAttribute = CachedBaseCharacterOwner->GetCharacterAttributeSet();
+	OnStaminaPercentChanged.ExecuteIfBound(CharacterAttribute->GetStaminaPercent());
+
+	//if (FMath::IsNearlyZero(CurrentStamina)) {
+	//	OnOutOfStamina.Broadcast(true);
+	//}
+	//else if (FMath::IsNearlyEqual(MaxStamina, CurrentStamina))
+	//{
+	//	OnOutOfStamina.Broadcast(false);
+	//}
 }
 
 void UCharacterAttributeComponent::UpdateOxygenValue(float DeltaTime, bool bIsUnderWater)
@@ -147,16 +150,10 @@ void UCharacterAttributeComponent::OnRep_Health()
 
 void UCharacterAttributeComponent::OnHealthChanged()
 {
-	if (OnHealthChangedEvent.IsBound())
+	if (OnHealthChangedEvent.IsBound() && CachedBaseCharacterOwner != nullptr)
 	{
-		OnHealthChangedEvent.Broadcast(Health / MaxHealth);
-	}
-	if (Health <= 0.f)
-	{
-		if (OnDeathEvent.IsBound())
-		{
-			OnDeathEvent.Broadcast();
-		}
+		const UHomeworkCharacterAttributeSet* CharacterAttribute = CachedBaseCharacterOwner->GetCharacterAttributeSet();
+		OnHealthChangedEvent.Broadcast(CharacterAttribute->GetHealthPercent());
 	}
 }
 

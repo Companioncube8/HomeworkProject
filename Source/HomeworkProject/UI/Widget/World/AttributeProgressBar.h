@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "AttributeProgressBar.generated.h"
 
+class UHomeworkCharacterAttributeSet;
 class UProgressBar;
 /**
  * 
@@ -16,7 +17,14 @@ class HOMEWORKPROJECT_API UAttributeProgressBar : public UUserWidget
 	GENERATED_BODY()
 public:
 	void SetProgressPercentage(float Percentage);
+
+	void SetAttributeSet(UHomeworkCharacterAttributeSet* AttributeSet_In);
+
+	UFUNCTION(BlueprintCallable)
+	float GetHealthPercent() const;
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthProgressBar;
+
+	TWeakObjectPtr<UHomeworkCharacterAttributeSet> AttributeSet;
 };
