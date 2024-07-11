@@ -6,6 +6,7 @@
 #include "Actors/Equipment/Throwables/ThrowableItem.h"
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Actors/Equipment/Weapons/RangeWeaponItem.h"
+#include "Actors/Projectiles/Projectile.h"
 #include "Characters/BaseCharacter.h"
 
 
@@ -69,6 +70,13 @@ void UCharacterEquipmentComponent::ReloadCurrentWeapon()
 {
 	check(IsValid(CurrentEquippedWeapon));
 	int32 AvailableAmunition = GetAvailableAmunitionForCurrentWeapon();
+
+
+	if (AvailableAmunition <= 0 && CurrentEquippedWeapon->CanShotOnlyWhenAim())
+	{
+		CachedBaseCharacter->StopAiming();
+	}
+
 	if (AvailableAmunition <= 0)
 	{
 		return;
@@ -77,7 +85,7 @@ void UCharacterEquipmentComponent::ReloadCurrentWeapon()
 	CurrentEquippedWeapon->StartReload();
 }
 
-int32 UCharacterEquipmentComponent::GetAvailableAmunitionForCurrentWeapon()
+int32 UCharacterEquipmentComponent::GetAvailableAmunitionForCurrentWeapon() const
 {
 	check(GetCurrentRangeWeapon());
 	return AmmunitionArray[(uint32)GetCurrentRangeWeapon()->GetAmmoType()];
@@ -131,6 +139,14 @@ void UCharacterEquipmentComponent::UnEquipCurrentItem()
 
 	PreviousEquippedSlot = CurrentEquippedSlot;
 	CurrentEquippedSlot = EEquipmentSlots::None;
+}
+
+void UCharacterEquipmentComponent::AttachProjectile(FName SocketName)
+{
+	AProjectile *Projectile = CurrentEquippedWeapon->GetProjectile();
+	if (Projectile) {
+		Projectile->AttachToComponent(CachedBaseCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, SocketName);
+	}
 }
 
 void UCharacterEquipmentComponent::AttachCurrentItemToEquippedSocket()

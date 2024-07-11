@@ -52,6 +52,9 @@ struct FFireInfo
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barrel attributes | Hit registration", meta = (EditCondition = "HitRegistration == EHitRegistrationType::Projectile"))
 	TSubclassOf<class AProjectile> ProjectileClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barrel attributes | Hit registration", meta = (EditCondition = "HitRegistration == EHitRegistrationType::Projectile"))
+	bool NeedCreatePoolProjectile = true;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barell attributes")
 	float FiringRange = 5000.f;
 
@@ -66,8 +69,23 @@ class HOMEWORKPROJECT_API UWeaponBarellComponent : public USceneComponent
 	GENERATED_BODY()
 public:
 	void Shot(FVector ShotStart, FVector ShotDirection, float SpreadAngle);
-	void SetFireInfo(FFireInfo NewFireInfo) { FireInfo = NewFireInfo; }
+	void SetFireInfo(FFireInfo NewFireInfo) {
+		FireInfo = NewFireInfo;
+		FireDamage = FireInfo.DamageAmount;
+	}
 
+<<<<<<< Updated upstream
+=======
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void CreateProjectilePool();
+
+	AProjectile* GetProjectile();
+	void RemoveLoadedProjectile();
+
+	void SetFireDamage(float FireDamage_In) { FireDamage = FireDamage_In; }
+
+>>>>>>> Stashed changes
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Barell attributes | Damage")
 	UNiagaraSystem* MuzzleFlashFX;
@@ -98,4 +116,33 @@ private:
 
 	UFUNCTION()
 	void ProcessHit(const FHitResult& HitResult, const FVector& Direction);
+<<<<<<< Updated upstream
+=======
+
+	UFUNCTION(Server, Reliable)
+	void Server_Shot(const TArray<FShotInfo>& ShotsInfos);
+
+	UPROPERTY(ReplicatedUsing = OnRep_LoadedProjectile)
+	AProjectile* LoadedProjectile;
+
+	UFUNCTION()
+	void OnRep_LoadedProjectile(AProjectile* OldProjectile);
+
+	UPROPERTY(ReplicatedUsing = OnRep_LastShotsInfo)
+	TArray<FShotInfo> LastShotsInfo;
+
+	UPROPERTY(Replicated)
+	TArray<AProjectile*>ProjectilePool;
+
+	UPROPERTY(Replicated)
+	int32 CurrentProjectileIndex;
+	
+	UFUNCTION()
+	void OnRep_LastShotsInfo();
+
+	const FVector ProjectilePoolLocation = FVector(0.f, 0.f, -100.f);
+
+	UPROPERTY()
+	float FireDamage = 0;
+>>>>>>> Stashed changes
 };

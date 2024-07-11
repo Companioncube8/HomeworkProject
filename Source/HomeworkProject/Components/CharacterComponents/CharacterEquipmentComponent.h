@@ -31,6 +31,8 @@ public:
 	FOnCurrentWeaponAmmoChanged OnCurrentWeaponAmmoChangedEvent;
 	FOnEquippedItemChanged OnEquippedItemChanged;
 
+	bool IsAmmunitionForCurrentWeaponAvalible() const { return GetAvailableAmunitionForCurrentWeapon() > 0; }
+
 	void ReloadCurrentWeapon();
 
 	void EquipItemInSlot(EEquipmentSlots Slot);
@@ -46,6 +48,28 @@ public:
 	void LaunchCurrentThrowableItem();
 
 	void ChangeCurrentWeaponFireMode();
+<<<<<<< Updated upstream
+=======
+
+	bool AddEquipmentItemToSlot(const TSubclassOf<AEquipableItem> EquipableItemClass, int32 SlotIndex);
+	void RemoveItemFromSlot(int32 SlotIndex);
+
+	void OpenViewEquipment(APlayerController* PlayerController);
+	void CloseViewEquipment();
+	bool IsViewVisible() const;
+
+	void OpenWeaponWheel(APlayerController* PlayerController);
+
+	bool IsSelectingWeapon() const;
+
+	void ConfirmWeaponSelection() const;
+
+	const TArray<AEquipableItem*>& GetItems() const;
+
+	virtual void OnLevelDeserialized_Implementation() override;
+
+	void AttachProjectile(FName SocketName);
+>>>>>>> Stashed changes
 protected:
 	virtual void BeginPlay() override;
 
@@ -72,7 +96,7 @@ private:
 	TAmmunitionArray AmmunitionArray;
 	TItemsArray ItemsArray;
 
-	int32 GetAvailableAmunitionForCurrentWeapon();
+	int32 GetAvailableAmunitionForCurrentWeapon() const;
 
 	UFUNCTION()
 	void OnWeaponReloadComplete();
@@ -93,4 +117,16 @@ private:
 
 	bool bIsEquipping = false;
 	FTimerHandle EquipTimer;
+<<<<<<< Updated upstream
 };
+=======
+
+	UEquipmentViewWidget* ViewWidget;
+
+	void AutoEquip();
+	void InitializeAmunition();
+
+	UPROPERTY(VisibleAnywhere)
+	UWeaponWheelWidget* WeaponWheelWidget;
+};
+>>>>>>> Stashed changes

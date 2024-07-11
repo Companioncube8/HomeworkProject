@@ -45,3 +45,22 @@ void AProjectile::OnCollisionHit(UPrimitiveComponent* HitComponent, AActor* Othe
 		OnProjectileHit.Broadcast(Hit, ProjectileMovementComponent->Velocity.GetSafeNormal());
 	}
 }
+<<<<<<< Updated upstream
+=======
+
+void AProjectile::SetProjectileActive_Implementation(bool bIsProjectileActive)
+{
+	ProjectileMovementComponent->SetActive(bIsProjectileActive);
+}
+
+void AProjectile::SetCollision(ECollisionEnabled::Type Type)
+{
+	CollisionComponent->SetCollisionEnabled(Type);
+	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
+}
+
+void AProjectile::SetSpeed(float Speed)
+{
+	ProjectileMovementComponent->InitialSpeed = Speed;
+}
+>>>>>>> Stashed changes

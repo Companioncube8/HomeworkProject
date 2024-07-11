@@ -45,6 +45,10 @@ struct FMantlingSettings
 };
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAimingStateChanged, bool)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartStringTension, float)
+DECLARE_MULTICAST_DELEGATE(FOnEndStringTension)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUpdateStringTensionPercent, float)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnReticalShake, FVector)
 
 class AInteractiveActor;
 class UCharacterEquipmentComponent;
@@ -83,6 +87,19 @@ public:
 	void Mantle(bool bForce = false);
 
 	virtual void Slide();
+<<<<<<< Updated upstream
+=======
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsSliding)
+	bool bIsSliding;
+
+	UFUNCTION(Server, Reliable)
+	void DestroyInteractiveObject(AActor* InteractiveObject);
+
+	UFUNCTION()
+	void OnRep_IsSliding(bool bWasSliding);
+
+>>>>>>> Stashed changes
 	virtual void AlternativeFire();
 
 	virtual void PrimaryMeleeAttack();
@@ -112,6 +129,10 @@ public:
 	bool IsAiming() const;
 
 	FOnAimingStateChanged OnAimingStateChanged;
+	FOnUpdateStringTensionPercent OnUpdateStringTensionPercent;
+	FOnStartStringTension OnStartStringTension;
+	FOnEndStringTension OnEndStringTension;
+	FOnReticalShake OnReticalShake;
 
 	FORCEINLINE UBaseCharacterMovementComponent* GetBaseCharacterMovementComponent() const { return  BaseCharacterMovementComponent; }
 
@@ -171,6 +192,47 @@ public:
 	virtual FGenericTeamId GetGenericTeamId() const override;
 
 	/** ~IGenericTeamAgentInterface**/
+<<<<<<< Updated upstream
+=======
+
+	FRotator GetAimOffset();
+
+	void Interact();
+
+	FOnInteractableObjectFound OnInteractableObjectFound;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Character | Components")
+	UWidgetComponent* HealthBarProgressComponent;
+
+	void InitializeHealthProgress();
+
+	virtual void BeginPlay() override;
+
+	bool PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup);
+	void UseInventory(ABasePlayerController* PlayerController);
+
+
+	void DecreaseCountInExistSlot(int32 Count, EAmunitionType AmunitionType);
+
+	int32 IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount, EAmunitionType AmunitionType);
+
+	void ConfirmWeaponSelection();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float VeryHighSignificanceDistance = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float HighSignificanceDistance = 1500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float MediumSignificanceDistance = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	float LowSignificanceDistance = 6000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Significance")
+	bool bIsSignificanceEnable = true;
+>>>>>>> Stashed changes
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Character | Movement")
 	void OnSprintStart();
@@ -307,7 +369,14 @@ private:
 
 	FTimerHandle OutOfOxigenDamageTimer;
 
+	UPROPERTY(ReplicatedUsing = OnRep_bIsAiming)
 	bool bIsAiming = false;
+
+	UFUNCTION(Server, Reliable)
+	void Server_Aiming(bool NewIsAiming);
+
+	UFUNCTION()
+	void OnRep_bIsAiming(bool bWasAiming);
 
 	float CurrentAimingMovementSpeed = 0.f;
 };

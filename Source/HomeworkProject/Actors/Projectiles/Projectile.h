@@ -23,6 +23,15 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnProjectileHit OnProjectileHit;
 
+<<<<<<< Updated upstream
+=======
+	UFUNCTION(BlueprintNativeEvent)
+	void SetProjectileActive(bool bIsProjectileActive);
+
+	void SetCollision(ECollisionEnabled::Type Type);
+	void SetSpeed(float Speed);
+
+>>>>>>> Stashed changes
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USphereComponent* CollisionComponent;

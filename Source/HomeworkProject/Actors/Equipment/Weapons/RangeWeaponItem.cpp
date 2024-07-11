@@ -36,6 +36,10 @@ void ARangeWeaponItem::BeginPlay()
 
 void ARangeWeaponItem::StartFire()
 {
+	if (CurrentFireMode().CanShotOnlyWhenAim && !bIsAiming)
+	{
+		return;
+	}
 	if (GetWorld()->GetTimerManager().IsTimerActive(ShotTimer))
 	{
 		return;
@@ -193,6 +197,19 @@ int32 ARangeWeaponItem::GetMaxAmmo() const
 
 void ARangeWeaponItem::StartReload()
 {
+<<<<<<< Updated upstream
+=======
+	if (CanShotOnlyWhenAim() && !bIsAiming)
+	{
+		return;
+	}
+	ReloadAmmo();
+	Server_Reload();
+}
+
+void ARangeWeaponItem::ReloadAmmo()
+{
+>>>>>>> Stashed changes
 	ABaseCharacter* CharacterOwner = GetCharacterOwner();
 	if (!CharacterOwner)
 	{
@@ -265,11 +282,6 @@ void ARangeWeaponItem::OnShotTimerElapsed()
 		return;
 	}
 
-	if (CurrentFireMode().AmmoType == EAmunitionType::RifleGrenades)
-	{
-		StartReload();
-	}
-
 	switch (CurrentFireMode().WeaponFireMode)
 	{
 		case EWeaponFireMode::Single:
@@ -281,6 +293,17 @@ void ARangeWeaponItem::OnShotTimerElapsed()
 		{
 			MakeShot();
 		}
+	}
+
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (!CharacterOwner)
+	{
+		return;
+	}
+
+	if (CurrentFireMode().NeedReloadAfterShot)
+	{
+		CharacterOwner->Reload();
 	}
 }
 
@@ -303,3 +326,81 @@ void ARangeWeaponItem::ChangeFireMode()
 	}
 	WeaponBarell->SetFireInfo(CurrentFireMode().FireInfo);
 }
+<<<<<<< Updated upstream
+=======
+
+void ARangeWeaponItem::Server_Reload_Implementation()
+{
+	Multicast_Reload();
+}
+
+void ARangeWeaponItem::Multicast_Reload_Implementation()
+{
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled())
+	{
+		return;
+	}
+	ReloadAmmo();
+}
+
+void ARangeWeaponItem::Server_ChangeAmmo_Implementation(int32 Index, int32 Value)
+{
+	Ammo[Index] = Value;
+	Multicast_ChangeAmmo(Index, Value);
+}
+
+void ARangeWeaponItem::Multicast_ChangeAmmo_Implementation(int32 Index, int32 Value)
+{
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled())
+	{
+		return;
+	}
+	Ammo[Index] = Value;
+}
+
+void ARangeWeaponItem::Server_EndReload_Implementation(bool bIsSuccess)
+{
+	Multicast_EndReload(bIsSuccess);
+}
+
+void ARangeWeaponItem::Multicast_EndReload_Implementation(bool bIsSuccess)
+{
+	ABaseCharacter* CharacterOwner = GetCharacterOwner();
+	if (CharacterOwner->IsLocallyControlled())
+	{
+		return;
+	}
+	EndReloadReplicated(bIsSuccess);
+}
+
+void ARangeWeaponItem::OnLevelDeserialized_Implementation()
+{
+	SetActorRelativeTransform(FTransform(FRotator::ZeroRotator, FVector::ZeroVector));
+	if (OnAmmoChanged.IsBound())
+	{
+		OnAmmoChanged.Broadcast(Ammo[IndexCurrentFireMode]);
+	}
+}
+
+void ARangeWeaponItem::UnEquip()
+{
+	RemoveLoadedProjectile();
+}
+
+void ARangeWeaponItem::RemoveLoadedProjectile()
+{
+	GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
+	WeaponBarell->RemoveLoadedProjectile();
+}
+
+AProjectile* ARangeWeaponItem::GetProjectile()
+{
+	if (CanShotOnlyWhenAim() && !bIsAiming)
+	{
+		return nullptr;
+	}
+	return WeaponBarell->GetProjectile();
+}
+>>>>>>> Stashed changes

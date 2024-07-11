@@ -64,6 +64,12 @@ struct FFireModeInfo
 	bool bAutoReload = true;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Parameters| Ammo")
+	bool NeedReloadAfterShot = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Parameters| Ammo")
+	bool CanShotOnlyWhenAim = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Parameters| Ammo")
 	FFireInfo FireInfo;
 };
 
@@ -74,16 +80,33 @@ class HOMEWORKPROJECT_API ARangeWeaponItem : public AEquipableItem
 public:
 	ARangeWeaponItem();
 
+<<<<<<< Updated upstream
 	void StartFire();
 	void StopFire();
 
 	void StartAim();
 	void StopAim();
+=======
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void StartFire();
+	void StopFire();
+
+	bool IsFiring() const { return bIsFiring; };
+	bool IsReloading() const { return bIsReloading; };
+
+	bool CanShotOnlyWhenAim() const { return CurrentFireMode().CanShotOnlyWhenAim; }
+
+	bool CanUseAmmo() const { return Ammo[IndexCurrentFireMode] > 0; }
+
+	virtual void StartAim();
+	virtual void StopAim();
+>>>>>>> Stashed changes
 
 	FTransform GetForeGripTransform() const;
 
 	void StartReload();
-	void EndReload(bool bIsSuccess);
+	virtual void EndReload(bool bIsSuccess);
 
 	float GetAimFOV() const;
 	float GetAimMovmentMaxSpeed() const;
@@ -106,6 +129,17 @@ public:
 	virtual EReticleType GetReticleType() const override;
 
 	void ChangeFireMode();
+<<<<<<< Updated upstream
+=======
+
+	virtual void OnLevelDeserialized_Implementation() override;
+
+	AProjectile* GetProjectile();
+
+	virtual void UnEquip() override;
+
+	void RemoveLoadedProjectile();
+>>>>>>> Stashed changes
 protected:
 	virtual void BeginPlay() override;
 
@@ -141,6 +175,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Fire mode")
 	TArray<FFireModeInfo> FireModes;
+<<<<<<< Updated upstream
+=======
+
+	FFireModeInfo CurrentFireMode() const { return FireModes[IndexCurrentFireMode]; };
+	
+>>>>>>> Stashed changes
 private:
 	TArray<int32> Ammo;
 
@@ -161,11 +201,15 @@ private:
 
 	bool bIsAiming;
 
-	float GetCurrentBulletSpreadAngle() const;
+	virtual float GetCurrentBulletSpreadAngle() const;
 
 	void OnShotTimerElapsed();
 
+<<<<<<< Updated upstream
 	FFireModeInfo CurrentFireMode() const { return FireModes[IndexCurrentFireMode]; };
 
+=======
+	UPROPERTY(Replicated)
+>>>>>>> Stashed changes
 	int32 IndexCurrentFireMode = 0;
 };

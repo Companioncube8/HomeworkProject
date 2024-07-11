@@ -9,6 +9,7 @@
 
 class ABaseCharacter;
 class AEquipableItem;
+class UProgressBar;
 /**
  * 
  */
@@ -21,12 +22,28 @@ protected:
 	void OnAimingStateChange(bool bIsAiming);
 
 	UFUNCTION(BlueprintNativeEvent)
+	void OnStartStringTension(float TenseTime);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void OnEndStringTension();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void OnReticalShake(FVector Offset);
+
+	UFUNCTION()
+	void OnUpdateStringTensionPercent(float Percent);
+
+	UFUNCTION(BlueprintNativeEvent)
 	void OnEquippedItemChanged(const AEquipableItem* EquippedItem);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reticle")
 	EReticleType CurrentReticle = EReticleType::None;
 
 	virtual void NativeConstruct() override;
+
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* StringTenseProgressBar;
+
 private:
 	TWeakObjectPtr<const AEquipableItem> CurrentEquippedItem;
 

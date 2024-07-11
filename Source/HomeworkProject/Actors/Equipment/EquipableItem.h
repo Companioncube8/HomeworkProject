@@ -53,7 +53,15 @@ protected:
 
 	ABaseCharacter* GetCharacterOwner() const;
 
+<<<<<<< Updated upstream
 private:
-	TWeakObjectPtr<ABaseCharacter> CachedCharacterOwner;
+=======
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	FName DataTableId = NAME_None;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
+	TArray<EEquipmentSlots> CompatablEquipmentSlotes;
+	
+>>>>>>> Stashed changes
+	TWeakObjectPtr<ABaseCharacter> CachedCharacterOwner;
 };

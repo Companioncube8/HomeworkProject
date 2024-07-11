@@ -614,9 +614,15 @@ void ABaseCharacter::StopAiming()
 	{
 		CurrentRangeWeapon->StopAim();
 	}
+	CurrentRangeWeapon->RemoveLoadedProjectile();
 	CurrentAimingMovementSpeed = 0.f;
 	bIsAiming = false;
 	OnStopAiming();
+
+	if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_Aiming(bIsAiming);
+	}
 }
 
 void ABaseCharacter::StartAiming()
@@ -626,10 +632,24 @@ void ABaseCharacter::StartAiming()
 	{
 		return;
 	}
+	if (!GetCharacterEquipmentComponent()->IsAmmunitionForCurrentWeaponAvalible() && CurrentRangeWeapon->CanShotOnlyWhenAim())
+	{
+		return;
+	}
 	bIsAiming = true;
 	CurrentAimingMovementSpeed = CurrentRangeWeapon->GetAimMovmentMaxSpeed();
 	CurrentRangeWeapon->StartAim();
 	OnStartAiming();
+
+	if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		Server_Aiming(bIsAiming);
+	}
+
+	if (CurrentRangeWeapon->CanShotOnlyWhenAim())
+	{
+		CurrentRangeWeapon->StartReload();
+	}
 }
 
 bool ABaseCharacter::IsAiming() const
@@ -734,4 +754,296 @@ void ABaseCharacter::SecondaryMeleeAttack()
 FGenericTeamId ABaseCharacter::GetGenericTeamId() const
 {
 	return  FGenericTeamId((uint8)Team);
+<<<<<<< Updated upstream
+=======
+}
+
+void ABaseCharacter::Server_Aiming_Implementation(bool NewIsAiming)
+{
+	if (!bIsAiming && NewIsAiming)
+	{
+		StartAiming();
+	}
+	if (bIsAiming && !NewIsAiming)
+	{
+		StopAiming();
+	}
+}
+
+void ABaseCharacter::OnRep_bIsAiming(bool bWasAiming)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		if (!bWasAiming && bIsAiming)
+		{
+			StartAiming();
+		}
+		if (bWasAiming && !bIsAiming)
+		{
+			StopAiming();
+		}
+	}
+}
+
+
+void ABaseCharacter::OnRep_IsMantling(bool bWasMantling)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy && !bWasMantling && bIsMantling)
+	{
+		Mantle(true);
+	}
+}
+
+void ABaseCharacter::OnRep_IsSliding(bool bWasSliding)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy && !bWasSliding && bIsSliding)
+	{
+		BaseCharacterMovementComponent->StartSlide();
+	}
+}
+
+void ABaseCharacter::DestroyInteractiveObject_Implementation(AActor* InteractiveObject)
+{
+	if (GetLocalRole() < ROLE_Authority) {
+		return;
+	}
+	InteractiveObject->Destroy();
+}
+
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABaseCharacter, bIsMantling);
+	DOREPLIFETIME(ABaseCharacter, bIsSliding);
+	DOREPLIFETIME(ABaseCharacter, bIsAiming);
+}
+
+FRotator ABaseCharacter::GetAimOffset()
+{
+	FVector AimDirectionWorld = GetBaseAimRotation().Vector();
+	FVector AimDirectionLocal = GetTransform().InverseTransformVectorNoScale(AimDirectionWorld);
+	FRotator Result = AimDirectionLocal.ToOrientationRotator();
+
+	return Result;
+}
+
+void ABaseCharacter::TraceLineOfSight()
+{
+	if (!IsPlayerControlled())
+	{
+		return;
+	}
+
+	FVector ViewLocation;
+	FRotator ViewRotation;
+
+	APlayerController* PlayerController = GetController<APlayerController>();
+
+	if (!PlayerController)
+	{
+		return;
+	}
+
+	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	FVector ViewDirection = ViewRotation.Vector();
+	FVector TraceEnd = ViewLocation + ViewDirection * LineOfSightDistance;
+
+	FHitResult HitResult;
+
+	GetWorld()->LineTraceSingleByChannel(HitResult, ViewLocation, TraceEnd, ECC_Visibility);
+
+	if (LineOfSightObject.GetObject() != HitResult.Actor)
+	{
+		FName ActionName;
+		LineOfSightObject = HitResult.Actor.Get();
+		if (LineOfSightObject.GetInterface())
+		{
+			ActionName = LineOfSightObject->GetActionEventName();
+		}
+		else
+		{
+			ActionName = NAME_None;
+		}
+		OnInteractableObjectFound.ExecuteIfBound(ActionName);
+	}
+}
+
+void ABaseCharacter::Interact()
+{
+	if (LineOfSightObject.GetInterface())
+	{
+		LineOfSightObject->Interact(this);
+	}
+}
+
+int32 ABaseCharacter::IncreaseCountInExistSlot(FName ItemID, int32 MaxCountForSlot, int32 AddedCount, EAmunitionType AmunitionType)
+{
+	CharacterEquipmentComponent->AddAmmo(AddedCount, AmunitionType);
+	return CharacterInventoryComponent->IncreaseCountInExistSlot(ItemID, MaxCountForSlot, AddedCount);
+}
+
+void ABaseCharacter::DecreaseCountInExistSlot(int32 Count, EAmunitionType AmunitionType)
+{
+	TArray<FName> NamesArray;
+	HomeworkDataTableUtils::GetAllAmmoNames(NamesArray);
+	for (FName ItemID : NamesArray)
+	{
+		if (FAmmoTableRow* AmmoData = HomeworkDataTableUtils::FindAmmoData(ItemID))
+		{
+			if (AmmoData->AmunitionType == AmunitionType)
+			{
+				CharacterInventoryComponent->DecreaseCountInExistSlot(ItemID, Count);
+				return;
+			}
+		}
+	}
+}
+
+bool ABaseCharacter::PickupItem(TWeakObjectPtr<UInventoryItem> ItemToPickup)
+{
+	bool Result = false;
+	if (CharacterInventoryComponent->HasFreeSlot())
+	{
+		Result = CharacterInventoryComponent->AddItem(ItemToPickup);
+	}
+	return Result;
+}
+
+void ABaseCharacter::UseInventory(ABasePlayerController* PlayerController)
+{
+	if (!PlayerController)
+	{
+		return;
+	}
+
+	if(!CharacterInventoryComponent->IsViewVisible())
+	{
+		CharacterInventoryComponent->OpenViewInventory(PlayerController);
+		CharacterEquipmentComponent->OpenViewEquipment(PlayerController);
+		PlayerController->SetInputMode(FInputModeGameAndUI{});
+		PlayerController->bShowMouseCursor = true;
+	} else
+	{
+		CharacterInventoryComponent->CloseViewInventory();
+		CharacterEquipmentComponent->CloseViewEquipment();
+		PlayerController->SetInputMode(FInputModeGameOnly{});
+		PlayerController->bShowMouseCursor = false;
+	}
+}
+
+void ABaseCharacter::ConfirmWeaponSelection()
+{
+	if (CharacterEquipmentComponent->IsSelectingWeapon())
+	{
+		CharacterEquipmentComponent->ConfirmWeaponSelection();
+	}
+}
+
+float ABaseCharacter::SignificanceFunction(USignificanceManager::FManagedObjectInfo* ObjectInfo, const FTransform& ViewPoint)
+{
+	if (ObjectInfo->GetTag() == SignificanceTagCharacter)
+	{
+		ABaseCharacter* Character = StaticCast<ABaseCharacter*>(ObjectInfo->GetObject());
+		if (!Character)
+		{
+			return SignificanceValueVeryHigh;
+		}
+		if (Character->IsPlayerControlled() && Character->IsLocallyControlled())
+		{
+			return SignificanceValueVeryHigh;
+		}
+
+		float DistToSquared = FVector::DistSquared(Character->GetActorLocation(), ViewPoint.GetLocation());
+		if (DistToSquared <= FMath::Square(VeryHighSignificanceDistance))
+		{
+			return SignificanceValueVeryHigh;
+		} else if (DistToSquared <= FMath::Square(HighSignificanceDistance))
+		{
+			return SignificanceValueHigh;
+		} else if (DistToSquared <= FMath::Square(MediumSignificanceDistance))
+		{
+			return SignificanceValueMedium;
+		} else if (DistToSquared <= FMath::Square(LowSignificanceDistance))
+		{
+			return SignificanceValueLow;
+		} else {
+			return SignificanceValueVeryLow;
+		}
+	}
+	return VeryHighSignificanceDistance;
+}
+
+void ABaseCharacter::PostSignificanceFunction(USignificanceManager::FManagedObjectInfo* ObjectInfo, float OldSignificance, float Significance, bool bFinal)
+{
+	if (OldSignificance == Significance)
+	{
+		return;
+	}
+	if (ObjectInfo->GetTag() != SignificanceTagCharacter)
+	{
+		return;
+	}
+
+	ABaseCharacter* Character = StaticCast<ABaseCharacter*>(ObjectInfo->GetObject());
+	if (!Character)
+	{
+		return;
+	}
+
+	UCharacterMovementComponent* MovementComponent = Character->GetCharacterMovement();
+	AAIController* AIController = Character->GetController<AAIController>();
+
+	if (Significance == SignificanceValueVeryHigh)
+	{
+		MovementComponent->SetComponentTickInterval(0.f);
+		Character->GetMesh()->SetComponentTickEnabled(true);
+		Character->GetMesh()->SetComponentTickInterval(0.f);
+		if (AIController)
+		{
+			AIController->SetActorTickInterval(0.f);
+		}
+	}
+	else if (Significance == SignificanceValueHigh)
+	{
+		MovementComponent->SetComponentTickInterval(0.f);
+		Character->GetMesh()->SetComponentTickEnabled(true);
+		Character->GetMesh()->SetComponentTickInterval(0.05f);
+		if (AIController)
+		{
+			AIController->SetActorTickInterval(0.f);
+		}
+	}
+	else if (Significance == SignificanceValueMedium)
+	{
+		MovementComponent->SetComponentTickInterval(0.1f);
+		Character->GetMesh()->SetComponentTickEnabled(true);
+		Character->GetMesh()->SetComponentTickInterval(0.1f);
+		if (AIController)
+		{
+			AIController->SetActorTickInterval(0.1f);
+		}
+	}
+	else if (Significance == SignificanceValueLow)
+	{
+
+		MovementComponent->SetComponentTickInterval(1.f);
+		Character->GetMesh()->SetComponentTickEnabled(true);
+		Character->GetMesh()->SetComponentTickInterval(1.f);
+		if (AIController)
+		{
+			AIController->SetActorTickInterval(1.f);
+		}
+	}
+	else if (Significance == SignificanceValueVeryLow)
+	{
+
+		MovementComponent->SetComponentTickInterval(5.f);
+		Character->GetMesh()->SetComponentTickEnabled(false);
+		if (AIController)
+		{
+			AIController->SetActorTickInterval(10.f);
+		}
+	}
+>>>>>>> Stashed changes
 }
